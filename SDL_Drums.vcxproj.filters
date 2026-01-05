@@ -1,0 +1,365 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\samples">
+      <UniqueIdentifier>{342958ab-1498-42f0-bb2b-e220b688ba18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images">
+      <UniqueIdentifier>{5a47d01b-22cb-44ba-ab8c-ccb8c2695cf8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\edit_buttons">
+      <UniqueIdentifier>{219ab01c-1ced-41df-b5ea-0612e2fa3f98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\icons_20">
+      <UniqueIdentifier>{32c2d606-1430-4c70-af83-b2409da6eeee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\icons_25">
+      <UniqueIdentifier>{fdf6deb8-d9c5-499e-9e95-1131a122f021}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\icons_30">
+      <UniqueIdentifier>{5acafe91-847b-4a3b-a0d6-0e94de28baeb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\sound_buttons">
+      <UniqueIdentifier>{d60c4bb9-840e-419a-8b17-755aed15849b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\steps">
+      <UniqueIdentifier>{a24df973-1638-4de3-b2ec-33b494a3cca0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\controls">
+      <UniqueIdentifier>{bb6d67ee-ac78-4561-a4af-ceaf8fd4c5b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\pattterns">
+      <UniqueIdentifier>{e15cf29e-8c2f-47ee-acfe-a30118d14902}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="control_button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="drum_loop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdl_drums.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sound_button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sound_data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="step_button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="trig_button.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="control_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="drum_loop.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sdl_drums.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sound_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sound_data.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="step_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="trig_button.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="SDL2.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="SDL2_image.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="SDL2_mixer.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="SDL2_ttf.dll">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\pause_inactive.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\pause_toggled.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\play.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\play_active.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\play_inactive.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\play_orange.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\rec_inactive.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\stop.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\controls\stop_inactive.png">
+      <Filter>Resource Files\images\controls</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\clear_button_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\clear_button2_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\redo_button_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\redo_button2_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\undo_button_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\undo_button2_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\active_empty_slot.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\empty_slot.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\empty_slot_b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_1b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_2b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_3b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_4b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_5.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_5b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_6b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_20\icon_7b.png">
+      <Filter>Resource Files\images\icons_20</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\active_empty_slot.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\empty_slot.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\empty_slot_b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_1b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_2b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_3b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_4b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_5b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_6b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_7b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_8b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\icon_9b.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\active_empty_slot.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\empty_slot.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\icon_1b.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\icon_2b.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\icon_3b.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\icon_4b.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\icon_5b.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\icon_6b.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_30\icon_7b.png">
+      <Filter>Resource Files\images\icons_30</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button01_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button01_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button02_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button02_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button03_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button03_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button04_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button04_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button05_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button05_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button06_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button06_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button07_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button07_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button08_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button08_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button09_active_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\sound_buttons\button09_inactive_c.png">
+      <Filter>Resource Files\images\sound_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\eight.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\five.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\four.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\one.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\seven.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\six.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\three.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\steps\two.png">
+      <Filter>Resource Files\images\steps</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\BD_Viscount_01.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\Clave_Viscount_01.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\Cymbal_Hard_Open_Viscount_04.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\Cymbal_Hard_Open_Viscount_06.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\Cymbal_Lite_Viscount_05_RR2.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\Handclap_Viscount_04.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\SD_Viscount_01.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\SD_Viscount_Handclap.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\Tom_Hi_Viscount.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="samples\Tom_Lo_Viscount.wav">
+      <Filter>Resource Files\samples</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="patterns\main.txt">
+      <Filter>Resource Files\pattterns</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
+</Project>
