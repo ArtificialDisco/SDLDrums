@@ -11,8 +11,8 @@ class SoundButton : public Button
                SDL_Rect rect, SDL_Keycode keyshortcut, SoundData *sound_data);
 
    void PlaySample();
-   bool HandleEvent(SDL_Event* e, bool* clicked);
-   void Draw();
+   bool HandleEvent(SDL_Event* e, bool* clicked) override;
+   void Draw() override;
 
  private:
   SoundData* sound_data_;

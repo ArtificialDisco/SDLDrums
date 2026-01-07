@@ -80,6 +80,19 @@ const char* step_button_files[] = {
   "./images/steps/eight.png",
 };
 
+const char* digit_files[] = {
+  "./images/digits/0.png",
+  "./images/digits/1.png",
+  "./images/digits/2.png",
+  "./images/digits/3.png",
+  "./images/digits/4.png",
+  "./images/digits/5.png",
+  "./images/digits/6.png",
+  "./images/digits/7.png",
+  "./images/digits/8.png",
+  "./images/digits/9.png",
+};
+
 const char* empty_slot = "./images/icons_25/empty_slot_b.png";
 const char* active_empty_slot = "./images/icons_25/active_empty_slot.png";
 
@@ -94,9 +107,51 @@ const char* undo_button_inactive_file = "./images/edit_buttons/undo_button2_inac
 const char* redo_button_inactive_file = "./images/edit_buttons/redo_button2_inactive.png";
 const char* clear_button_inactive_file = "./images/edit_buttons/clear_button2_inactive.png";
 
+const char* bpm_up_10_inactive_file = "./images/bpm/bpm_up_10_inactive.png";
+const char* bpm_up_10_active_file = "./images/bpm/bpm_up_10_active.png";
+const char* bpm_up_1_inactive_file = "./images/bpm/bpm_up_1_inactive.png";
+const char* bpm_up_1_active_file = "./images/bpm/bpm_up_1_active.png";
+const char* bpm_down_10_inactive_file = "./images/bpm/bpm_down_10_inactive.png";
+const char* bpm_down_10_active_file = "./images/bpm/bpm_down_10_active.png";
+const char* bpm_down_1_inactive_file = "./images/bpm/bpm_down_1_inactive.png";
+const char* bpm_down_1_active_file = "./images/bpm/bpm_down_1_active.png";
+const char* bpm_empty_file = "./images/bpm/bpm_empty.png";
+
+SDL_Surface* sound_buttons_inactive[SOUND_BUTTONS_TOTAL];
+SDL_Surface* sound_buttons_active[SOUND_BUTTONS_TOTAL];
+SDL_Surface* trig_button_icons[SOUND_BUTTONS_TOTAL];
+SDL_Surface* step_button_icons[STEP_BUTTONS_TOTAL];
+SDL_Surface* digit_imgs[10]; 
+
+SDL_Surface* play_button_inactive_surface;
+SDL_Surface* play_button_active_surface;
+SDL_Surface* stop_button_surface;
+SDL_Surface* rec_button_surface;
+SDL_Surface* pause_button_surface;
+SDL_Surface* pause_button_toggled_surface;
+
+SDL_Surface* undo_button_surface;
+SDL_Surface* redo_button_surface;
+SDL_Surface* clear_button_surface;
+
+SDL_Surface* bpm_up_10_inactive_surface;
+SDL_Surface* bpm_up_10_active_surface;
+SDL_Surface* bpm_up_1_inactive_surface;
+SDL_Surface* bpm_up_1_active_surface;
+
+SDL_Surface* bpm_down_10_inactive_surface;
+SDL_Surface* bpm_down_10_active_surface;
+SDL_Surface* bpm_down_1_inactive_surface;
+SDL_Surface* bpm_down_1_active_surface;
+
+SDL_Surface* bpm_empty_surface;
+
+SDL_Surface* empty_slot_surface;
+SDL_Surface* active_empty_slot_surface;
+
 // Keep track of all surfaces so we can free them correctly
-// Total surfaces are currently 46. Update this when needed.
-SDL_Surface* all_surfaces[50];
+// Total surfaces are currently 54. Update this when needed.
+SDL_Surface* all_surfaces[70];
 int total_surfaces = 0;
 
 void free_surfaces() {
@@ -118,6 +173,106 @@ Uint32 time_left(void)
 		return 0;
 	else
 		return next_time - now;
+}
+
+void putpixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
+{
+  int bpp = surface->format->BytesPerPixel;
+  Uint8* p = (Uint8*)surface->pixels + y * surface->pitch + x * bpp;
+
+  if (x > surface->w || x < 0) return;
+  if (y > surface->h || y < 0) return;
+
+  switch (bpp) {
+  case 1:
+    *p = pixel;
+    break;
+  case 2:
+    *(Uint16*)p = pixel;
+    break;
+  case 3:
+    if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+      p[0] = (pixel >> 16) & 0xff;
+      p[1] = (pixel >> 8) & 0xff;
+      p[2] = pixel & 0xff;
+    }
+    else {
+      p[0] = pixel & 0xff;
+      p[1] = (pixel >> 8) & 0xff;
+      p[2] = (pixel >> 16) & 0xff;
+    }
+    break;
+  case 4:
+    *(Uint32*)p = pixel;
+    break;
+  }
+}
+
+void draw_border(SDL_Surface* surface, SDL_Rect rect)
+{
+  SDL_Rect top, bottom, left, right;
+  Uint32 yellow = SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a);
+
+  top.x = rect.x-1, top.y = rect.y-1;
+  top.w = rect.w+2, top.h = 2;
+
+  left.x = rect.x-1, left.y = rect.y-1;
+  left.w = 2, left.h = rect.h + 2;
+
+  bottom.x = rect.x-1, bottom.y = rect.y + rect.h + 1;
+  bottom.w = rect.w+2, bottom.h = 1;
+
+  right.x = rect.x + rect.w, right.y = rect.y;
+  right.w = 1, right.h = rect.h+1;
+
+  SDL_FillRect(surface, &top, yellow);
+  SDL_FillRect(surface, &left, yellow);
+  SDL_FillRect(surface, &bottom, yellow);
+  SDL_FillRect(surface, &right, yellow);
+}
+
+
+static void draw_sample(SDL_Surface* screen, Uint8* abuf, int len, Uint32 color) {
+  Uint16 format;
+  int channels, incr;
+  Sint16* buffer16;
+  Sint32* buffer32;
+
+  Mix_QuerySpec(NULL, &format, &channels);
+  incr = (format & 0xFF) * channels;
+
+  unsigned long int i;
+  unsigned long int length = len/2;
+  switch (format & 0xFF) {
+  case 16:
+    buffer16 = reinterpret_cast<Sint16*>(abuf);
+    for (i = 0; i < length; i += 2) {
+      Sint16 current_l = *(buffer16);
+      Sint16 current_r = *(buffer16 + 1);
+      putpixel(screen, i * screen->w / length,
+        screen->h / 2 +
+        ((current_l + current_r) / 2 * (screen->h)) / (2 << 16),
+        color);
+      buffer16 += 2;
+    }
+    break;
+  case 32:
+    buffer32 = reinterpret_cast<Sint32*>(abuf);
+    for (i = 0; i < length; i += 4) {
+      Sint32 current_l = *(buffer32);
+      Sint32 current_r = *(buffer32 + 1);
+      putpixel(screen, i * screen->w / length,
+        screen->h / 2ll + 100ll +
+        ((current_l) * (screen->h / 2ll)) / (2ll << 32ll),
+        color);
+      putpixel(screen, i * screen->w / length,
+        screen->h / 2ll - 100ll +
+        ((current_r) * (screen->h / 2ll)) / (2ll << 32ll),
+        color);
+      buffer32 += 2;
+    }
+    break;
+  }
 }
 
 bool init_sdl() {
@@ -198,8 +353,7 @@ bool load_sound_button_imgs(SDL_Surface* screen,
   return true;
 }
 
-bool load_trig_button_imgs(
-    SDL_Surface* screen, SDL_Surface *trig_button_icons[SOUND_BUTTONS_TOTAL]) {
+bool load_trig_button_imgs(SDL_Surface* screen) {
   for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
     trig_button_icons[i] = nullptr;
   }
@@ -212,14 +366,27 @@ bool load_trig_button_imgs(
   return true;
 }
 
-bool load_step_button_imgs(SDL_Surface *screen,
-                           SDL_Surface *step_button_icons[STEP_BUTTONS_TOTAL]) {
+bool load_step_button_imgs(SDL_Surface *screen) {
   for (int i = 0; i < STEP_BUTTONS_TOTAL; i++) {
     step_button_icons[i] = nullptr;
   }
   for (int i = 0; i < STEP_BUTTONS_TOTAL; i++) {
     step_button_icons[i] = load_surface(screen, step_button_files[i], false);
-    if (step_button_icons[i] == NULL) {
+    if (step_button_icons[i] == nullptr) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool load_digits(SDL_Surface* screen) {
+  
+  for (int i = 0; i < 10; i++) {
+    digit_imgs[i] = nullptr;
+  }
+  for (int i = 0; i < 10; i++) {
+    digit_imgs[i] = load_surface(screen, digit_files[i]);
+    if (digit_imgs[i] == nullptr) {
       return false;
     }
   }
@@ -267,6 +434,20 @@ bool update_trigs(std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL]
   return screen_needs_update;
 }
 
+void draw_bpm(SDL_Surface* surface, SDL_Rect rect, int bpm) {
+  short d3 = bpm % 10; bpm /= 10;
+  short d2 = bpm % 10; bpm /= 10;
+  short d1 = bpm % 10;
+  int x_step = digit_imgs[d1]->w;
+  
+  SDL_BlitSurface(digit_imgs[d1], nullptr, surface, &rect);
+  rect.x += x_step;
+  SDL_BlitSurface(digit_imgs[d2], nullptr, surface, &rect);
+  rect.x += x_step;
+  SDL_BlitSurface(digit_imgs[d3], nullptr, surface, &rect);
+  rect.x += x_step;
+}
+
 // True for undo, false for redo. Maybe confusing? Should use enum despite the boolean
 // nature of this?
 void apply_undo_action(DrumLoop::UndoAction action,
@@ -280,8 +461,7 @@ void apply_undo_action(DrumLoop::UndoAction action,
     // !undo of course means redo
     bool value = (undo && data == '0') ||
                  (!undo && data == '1') ? true : false;
-    trig_buttons[track][step]->
-      SetEnabled(value, false);
+    trig_buttons[track][step]->SetEnabled(value, false);
     update_trigs(trig_buttons);
   } else if (action.type == DrumLoop::ClearAll) {
     if (undo) {
@@ -300,23 +480,94 @@ void close_program() {
   SDL_Quit();
 }
 
+int init_all_surfaces(SDL_Surface* screen) {
+  play_button_inactive_surface =
+    load_surface(screen, play_button_inactive_file, false);
+  play_button_active_surface =
+    load_surface(screen, play_button_active_file, false);
+  stop_button_surface =
+    load_surface(screen, stop_button_file, false);
+  rec_button_surface = load_surface(screen, rec_button_file, false);
+  pause_button_surface = load_surface(screen, pause_button_file, false);
+  pause_button_toggled_surface = load_surface(screen,
+    pause_button_toggled_file, false);
+
+  if (!play_button_inactive_surface || !play_button_active_surface ||
+    !stop_button_surface || !rec_button_surface || !pause_button_surface ||
+    !pause_button_toggled_surface) {
+    return INIT_FAILED;
+  }
+
+  bpm_up_10_inactive_surface = load_surface(screen, bpm_up_10_inactive_file);
+  bpm_up_10_active_surface = load_surface(screen, bpm_up_10_active_file);
+  bpm_up_1_inactive_surface = load_surface(screen, bpm_up_1_inactive_file);
+  bpm_up_1_active_surface = load_surface(screen, bpm_up_1_active_file);
+  bpm_down_10_inactive_surface = load_surface(screen, bpm_down_10_inactive_file);
+  bpm_down_10_active_surface = load_surface(screen, bpm_down_10_active_file);
+  bpm_down_1_inactive_surface = load_surface(screen, bpm_down_1_inactive_file);
+  bpm_down_1_active_surface = load_surface(screen, bpm_down_1_active_file);
+  bpm_empty_surface = load_surface(screen, bpm_empty_file);
+
+  if (!bpm_up_10_inactive_surface || !bpm_up_10_active_surface ||
+    !bpm_up_1_inactive_surface || !bpm_up_1_active_surface ||
+    !bpm_down_10_inactive_surface || !bpm_down_10_active_surface ||
+    !bpm_down_1_inactive_surface || !bpm_down_1_active_surface ||
+    !bpm_empty_file) {
+    return INIT_FAILED;
+  }
+
+  empty_slot_surface = load_surface(screen, empty_slot, false);
+  active_empty_slot_surface = load_surface(screen, active_empty_slot, false);
+
+  if (!empty_slot_surface || !active_empty_slot_surface) {
+    return INIT_FAILED;
+  }
+
+  if (!load_sound_button_imgs(screen, sound_buttons_inactive,
+    sound_buttons_active)) {
+    return INIT_FAILED;
+  }
+
+  if (!load_trig_button_imgs(screen)) {
+    return INIT_FAILED;
+  }
+
+  if (!load_step_button_imgs(screen)) {
+    return INIT_FAILED;
+  }
+
+  if (!load_digits(screen)) {
+    return INIT_FAILED;
+  }
+
+  undo_button_surface =
+    load_surface(screen, undo_button_inactive_file);
+  redo_button_surface =
+    load_surface(screen, redo_button_inactive_file);
+  clear_button_surface =
+    load_surface(screen, clear_button_inactive_file);
+
+  if (!undo_button_surface || !redo_button_surface || !clear_button_surface) {
+    return INIT_FAILED;
+  }
+
+}
+
+Uint32 yellow;
+SDL_Rect scope_rect = { 367, 175, 300, 200 };
+void mix_func(void* udata, Uint8* stream, int len) {
+  SDL_Surface* surface = (SDL_Surface*)udata;
+  
+  SDL_Rect srcrect = { 0, 0, 300, 200 };
+  //SDL_Rect dstrect = { 350, 125, 300, 200 };
+  SDL_FillRect(surface, &srcrect, SDL_MapRGB(screen->format, 0, 0, 0));
+  draw_sample(surface, stream, len, SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a));
+  SDL_BlitSurface(surface, nullptr, screen, &scope_rect);
+  SDL_UpdateWindowSurface(window);
+}
+
+
 int main(int argc, char* argv[]) {
-  SDL_Surface* sound_buttons_inactive[SOUND_BUTTONS_TOTAL];
-  SDL_Surface* sound_buttons_active[SOUND_BUTTONS_TOTAL];
-  SDL_Surface* trig_button_icons[SOUND_BUTTONS_TOTAL];
-  SDL_Surface* step_button_icons[STEP_BUTTONS_TOTAL];
-
-  SDL_Surface* play_button_inactive_surface;
-  SDL_Surface* play_button_active_surface;
-  SDL_Surface* stop_button_surface;
-  SDL_Surface* rec_button_surface;
-  SDL_Surface* pause_button_surface;
-  SDL_Surface* pause_button_toggled_surface;
-
-  SDL_Surface* undo_button_surface;
-  SDL_Surface* redo_button_surface;
-  SDL_Surface* clear_button_surface;
-
   std::unique_ptr<SoundButton> sound_buttons[SOUND_BUTTONS_TOTAL];
   std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL][STEPS_TOTAL];
   std::unique_ptr<StepButton> step_buttons[STEP_BUTTONS_TOTAL];
@@ -341,65 +592,28 @@ int main(int argc, char* argv[]) {
     return INIT_FAILED;
   }
 
+  const Uint32 black = SDL_MapRGB(screen->format, 0, 0, 0);
+  Uint32 yellow = SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a);
+
+  SDL_Surface* scope = SDL_CreateRGBSurface(SDL_SWSURFACE, 300, 200,
+    screen->format->BitsPerPixel,
+    screen->format->Rmask, screen->format->Gmask, screen->format->Bmask,
+    screen->format->Amask);
+  draw_border(screen, scope_rect);
+
   if (!sound_data.LoadSamples(samples_files)) {
     close_program();
     return INIT_FAILED;
   }
 
-  play_button_inactive_surface =
-      load_surface(screen, play_button_inactive_file, false);
-  play_button_active_surface =
-      load_surface(screen, play_button_active_file, false);
-  stop_button_surface =
-      load_surface(screen, stop_button_file, false);
-  rec_button_surface = load_surface(screen, rec_button_file, false);
-  pause_button_surface = load_surface(screen, pause_button_file, false);
-  pause_button_toggled_surface = load_surface(screen,
-                                             pause_button_toggled_file, false);
-
-  if (!play_button_inactive_surface || !play_button_active_surface ||
-      !stop_button_surface || !rec_button_surface || !pause_button_surface ||
-      !pause_button_toggled_surface) {
+  if (init_all_surfaces(screen) == INIT_FAILED) {
     free_surfaces();
     close_program();
-    return INIT_FAILED;
-  }
-
-  if (!load_sound_button_imgs(screen, sound_buttons_inactive,
-                              sound_buttons_active)) {
-    free_surfaces();
-    close_program();
-    return INIT_FAILED;
-  }
-
-  if (!load_trig_button_imgs(screen, trig_button_icons)) {
-    free_surfaces();
-    close_program();
-    return INIT_FAILED; 
-  }
-
-  if (!load_step_button_imgs(screen, step_button_icons)) {
-    free_surfaces();
-    close_program();
-    return INIT_FAILED;
-  }
-
-  undo_button_surface =
-      load_surface(screen, undo_button_inactive_file);
-  redo_button_surface =
-      load_surface(screen, redo_button_inactive_file);
-  clear_button_surface =
-      load_surface(screen, clear_button_inactive_file);
-
-  if (!undo_button_surface || !redo_button_surface || !clear_button_surface) {
-    free_surfaces();
-    close_program();
-    return INIT_FAILED;
   }
 
   // Init sound pads
-  int button_pos_x = 30;
-  int button_pos_y = 30 + 2*SOUND_BUTTON_HEIGHT;
+  int button_pos_x = X_MARGIN;
+  int button_pos_y = Y_MARGIN + 2*SOUND_BUTTON_HEIGHT;
   for (unsigned i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
     SDL_Rect rect;
     rect.x = button_pos_x;
@@ -413,24 +627,63 @@ int main(int argc, char* argv[]) {
     
     button_pos_x += (SOUND_BUTTON_WIDTH);
     if ((i+1) % 3 == 0) {
-      button_pos_x = 30;
+      button_pos_x = X_MARGIN;
       button_pos_y -= (SOUND_BUTTON_HEIGHT);
     }
   }
 
+  // Init BPM buttons
+  SDL_Rect bpm_rect;
+  bpm_rect.x = scope_rect.x;
+  bpm_rect.y = Y_MARGIN;
+  bpm_rect.w = bpm_up_10_inactive_surface->w;
+  bpm_rect.h = bpm_up_10_inactive_surface->h;
+  std::unique_ptr<Button> bpm_10_up_button = std::make_unique<Button>(
+      screen, bpm_up_10_active_surface, bpm_up_10_inactive_surface, nullptr,
+      bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_10_up_button->Draw();
+
+  bpm_rect.y += bpm_up_10_inactive_surface->h + 5;
+  std::unique_ptr<Button> bpm_10_down_button = std::make_unique<Button>(
+    screen, bpm_down_10_active_surface, bpm_down_10_inactive_surface, nullptr,
+    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_10_down_button->Draw();
+
+  bpm_rect.x += bpm_up_10_inactive_surface->w + 5;
+  bpm_rect.y = Y_MARGIN;
+  bpm_rect.w = bpm_up_1_inactive_surface->w;
+  bpm_rect.h = bpm_up_1_inactive_surface->h;
+  std::unique_ptr<Button> bpm_1_up_button = std::make_unique<Button>(
+    screen, bpm_up_1_active_surface, bpm_up_1_inactive_surface, nullptr,
+    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_1_up_button->Draw();
+
+  bpm_rect.y += bpm_up_1_inactive_surface->h + 5;
+  std::unique_ptr<Button> bpm_1_down_button = std::make_unique<Button>(
+    screen, bpm_down_1_active_surface, bpm_down_1_inactive_surface, nullptr,
+    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_1_down_button->Draw();
+
+  const SDL_Rect bpm_indicator_rect =
+  { bpm_rect.x + 60, bpm_rect.y - 20, bpm_rect.w, bpm_rect.h };
+
+  bpm_rect.x += bpm_up_1_active_surface->w + 10;
+  bpm_rect.y = Y_MARGIN;
+  SDL_BlitSurface(bpm_empty_surface, nullptr, screen, &bpm_rect);
+
   // Init drum loop and create sequencer
   DrumLoop drum_loop(&sound_data);
 
-  SDL_Surface* empty_slot_surface = load_surface(screen, empty_slot);
-  SDL_Surface* active_empty_slot_surface = load_surface(screen, active_empty_slot);
+
+  draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
 
   SDL_Rect trig_rect;
+  trig_rect.x = X_MARGIN;
+  trig_rect.y = SCREEN_HEIGHT - Y_MARGIN;
   trig_rect.w = empty_slot_surface->w;
   trig_rect.h = empty_slot_surface->h;
-  trig_rect.x = 30;
-  trig_rect.y = SCREEN_HEIGHT - 30;
   for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
-    trig_rect.x = 30;
+    trig_rect.x = X_MARGIN;
     trig_rect.y -= 27;
     for (int j = 0; j < STEPS_TOTAL; j++) {
       trig_buttons[i][j] = std::make_unique<TrigButton>(
@@ -459,7 +712,7 @@ int main(int argc, char* argv[]) {
 
   // Step buttons
   SDL_Rect step_rect;
-  step_rect.x = 35;
+  step_rect.x = X_MARGIN + 5;
   step_rect.y = trig_rect.y - step_button_icons[0]->h - 5;
   step_rect.w = step_button_icons[0]->w;
   step_rect.h = step_button_icons[0]->h;
@@ -478,21 +731,16 @@ int main(int argc, char* argv[]) {
   }
 
   // Control buttons
-  SDL_Rect play_rect;
-  play_rect.x = 30;
-  play_rect.y = SCREEN_HEIGHT - 400;
-  play_rect.w = CONTROL_BUTTON_WIDTH;
-  play_rect.h = CONTROL_BUTTON_HEIGHT;
+  SDL_Rect play_rect = { X_MARGIN, SCREEN_HEIGHT - 420,
+      CONTROL_BUTTON_WIDTH, CONTROL_BUTTON_HEIGHT };
   play_button = std::make_unique<ControlButton>(
       screen, play_button_active_surface, play_button_inactive_surface,
       stop_button_surface, play_rect, SDLK_p, SDLK_UNKNOWN);
   play_button->Draw();
 
-  SDL_Rect pause_rect;
-  pause_rect.x = play_rect.x + CONTROL_BUTTON_WIDTH;
-  pause_rect.y = SCREEN_HEIGHT - 400;
-  pause_rect.w = CONTROL_BUTTON_WIDTH;
-  pause_rect.h = CONTROL_BUTTON_HEIGHT;
+  SDL_Rect pause_rect = {
+      play_rect.x + CONTROL_BUTTON_WIDTH, SCREEN_HEIGHT - 420,
+      CONTROL_BUTTON_WIDTH, CONTROL_BUTTON_HEIGHT };
   pause_button = std::make_unique<ControlButton>(
       screen, nullptr, pause_button_surface,
       pause_button_toggled_surface, pause_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
@@ -500,7 +748,7 @@ int main(int argc, char* argv[]) {
 
   SDL_Rect rec_rect;
   rec_rect.x = pause_rect.x + CONTROL_BUTTON_WIDTH;
-  rec_rect.y = SCREEN_HEIGHT - 400;
+  rec_rect.y = SCREEN_HEIGHT - 420;
   rec_rect.w = CONTROL_BUTTON_WIDTH;
   rec_rect.h = CONTROL_BUTTON_HEIGHT;
   rec_button = std::make_unique<ControlButton>(
@@ -511,21 +759,19 @@ int main(int argc, char* argv[]) {
   // Edit buttons
   SDL_Rect edit_rect;
   edit_rect.x = SCREEN_WIDTH - undo_button_surface->w - 70;
-  edit_rect.y = 30;
+  edit_rect.y = Y_MARGIN;
   edit_rect.w = 200;
   edit_rect.h = 50;
   undo_button = std::make_unique<Button>(screen, nullptr,
       undo_button_surface, undo_button_surface, edit_rect,
       SDLK_u, SDLK_UNKNOWN);
-  //undo_button->Draw();
-  SDL_BlitSurface(undo_button_surface, NULL, screen, &edit_rect);
+  undo_button->Draw();
   
   edit_rect.y += 10 + redo_button_surface->h;
   redo_button = std::make_unique<Button>(screen, nullptr,
       redo_button_surface, redo_button_surface, edit_rect,
       SDLK_r, SDLK_UNKNOWN);
-  //redo_button->Draw();
-  SDL_BlitSurface(redo_button_surface, NULL, screen, &edit_rect);
+  redo_button->Draw();
 
   edit_rect.y += 10 + clear_button_surface->h;
   edit_rect.w = 200;
@@ -533,8 +779,7 @@ int main(int argc, char* argv[]) {
   clear_button = std::make_unique<Button>(screen, nullptr,
       clear_button_surface, clear_button_surface, edit_rect,
       SDLK_l, SDLK_UNKNOWN);
-  //undo_button->Draw();
-  SDL_BlitSurface(clear_button_surface, NULL, screen, &edit_rect);
+  clear_button->Draw();
 
   SDL_UpdateWindowSurface(window);
   
@@ -544,6 +789,9 @@ int main(int argc, char* argv[]) {
   next_time = SDL_GetTicks() + TICK_INTERVAL;
   int current_step = -1;
   bool screen_needs_update;
+
+  Mix_SetPostMix(mix_func, scope);
+
   while (quit == false) {
     screen_needs_update = false;
     if (drum_loop.Running()) { 
@@ -646,11 +894,33 @@ int main(int argc, char* argv[]) {
               drum_loop.Start();
               pause_button->SetToggled(false);
             }
-            //play_button->SetToggled(false);
           }
         }
       }
       ////////////////////////////////
+
+      bool bpm_10_up_clicked = false;
+      bool bpm_1_up_clicked = false;
+      bool bpm_10_down_clicked = false;
+      bool bpm_1_down_clicked = false;
+      screen_needs_update = bpm_10_up_button->HandleEvent(&e, &bpm_10_up_clicked);
+      screen_needs_update = bpm_1_up_button->HandleEvent(&e, &bpm_1_up_clicked);
+      screen_needs_update = bpm_10_down_button->HandleEvent(&e, &bpm_10_down_clicked);
+      screen_needs_update = bpm_1_down_button->HandleEvent(&e, &bpm_1_down_clicked);
+
+      if (bpm_10_up_clicked) {
+        drum_loop.SpeedUp(10);
+        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+      } else if (bpm_1_up_clicked) {
+        drum_loop.SpeedUp(1);
+        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+      } else if (bpm_10_down_clicked) {
+        drum_loop.SpeedUp(-10);
+        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+      } else if (bpm_1_down_clicked) {
+        drum_loop.SpeedUp(-1);
+        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+      }
 
       bool mousedown = false;
       bool clear_button_clicked = false;
@@ -729,9 +999,11 @@ int main(int argc, char* argv[]) {
             break;
           case SDLK_UP:
             drum_loop.SpeedUp(10);
+            draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
             break;
           case SDLK_DOWN:
             drum_loop.SlowDown(10);
+            draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
             break;
           case SDLK_RIGHT:
             drum_loop.NextStep();

@@ -13,8 +13,9 @@ class Button
 
    void SetPosition(int x, int y);
    SDL_Keycode GetKeyShortcut() { return keyshortcut1_; }
-   void PlaySample();
+
    bool HandleEventBase(SDL_Event *e, bool *mousedown, bool *clicked);
+   virtual bool HandleEvent(SDL_Event* e, bool* clicked);
    // void Draw(SDL_Surface *screen);
 
    bool HasError() { return has_error_; }
@@ -25,6 +26,7 @@ class Button
 
    void SetActive();
    void SetInactive();
+   virtual void Draw();
    void SetToggled(bool toggled);
 
  private:

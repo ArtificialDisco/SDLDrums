@@ -38,6 +38,14 @@ void Button::SetInactive() {
   SDL_BlitSurface(inactive_, NULL, screen_, &rect_);
 }
 
+void Button::Draw() {
+  if (Active()) {
+    SetActive();
+  } else {
+    SetInactive();
+  }
+}
+
 void Button::SetToggled(bool toggled) {
 
   if (toggled) {
@@ -46,6 +54,15 @@ void Button::SetToggled(bool toggled) {
     SDL_BlitSurface(inactive_, NULL, screen_, &rect_);
   }
   is_toggled_ = toggled;
+}
+
+bool Button::HandleEvent(SDL_Event* e, bool* clicked) {
+  //bool clicked = false;
+  bool screen_change = HandleEventBase(e, nullptr, clicked);
+  if (screen_change) {
+    Draw();
+  }
+  return screen_change;
 }
 
 bool Button::HandleEventBase(SDL_Event *e, bool *mousedown, bool *clicked) {

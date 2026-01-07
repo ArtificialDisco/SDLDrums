@@ -22,4 +22,7 @@ const int SOUND_BUTTON_HEIGHT = 82;
 const int CONTROL_BUTTON_WIDTH = 82;
 const int CONTROL_BUTTON_HEIGHT = 82;
 
+const int X_MARGIN = 40;
+const int Y_MARGIN = 30;
+
 #endif  // SDL_DRUMS_H

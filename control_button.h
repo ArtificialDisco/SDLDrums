@@ -15,7 +15,7 @@ class ControlButton : public Button
                 SDL_Keycode keyshortcut2);
 
   bool HandleEvent(SDL_Event* e, bool* clicked);
-  void Draw();
+  void Draw() override;
 };
 
 #endif  // CONTROL_BUTTON_H

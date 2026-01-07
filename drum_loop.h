@@ -47,6 +47,7 @@ class DrumLoop
   void Stop();
   void Pause();
   bool Paused();
+  int GetBPM() { return bpm_; } 
   void SetBPM(int bpm);
   void SpeedUp(int bpm);
   void SlowDown(int bpm);
