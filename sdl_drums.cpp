@@ -634,7 +634,7 @@ int main(int argc, char* argv[]) {
 
   // Init BPM buttons
   SDL_Rect bpm_rect;
-  bpm_rect.x = scope_rect.x;
+  bpm_rect.x = scope_rect.x + 30;
   bpm_rect.y = Y_MARGIN;
   bpm_rect.w = bpm_up_10_inactive_surface->w;
   bpm_rect.h = bpm_up_10_inactive_surface->h;
@@ -735,7 +735,7 @@ int main(int argc, char* argv[]) {
       CONTROL_BUTTON_WIDTH, CONTROL_BUTTON_HEIGHT };
   play_button = std::make_unique<ControlButton>(
       screen, play_button_active_surface, play_button_inactive_surface,
-      stop_button_surface, play_rect, SDLK_p, SDLK_UNKNOWN);
+      stop_button_surface, play_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
   play_button->Draw();
 
   SDL_Rect pause_rect = {
@@ -743,7 +743,7 @@ int main(int argc, char* argv[]) {
       CONTROL_BUTTON_WIDTH, CONTROL_BUTTON_HEIGHT };
   pause_button = std::make_unique<ControlButton>(
       screen, nullptr, pause_button_surface,
-      pause_button_toggled_surface, pause_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+      pause_button_toggled_surface, pause_rect, SDLK_p, SDLK_UNKNOWN);
   pause_button->Draw();
 
   SDL_Rect rec_rect;
@@ -926,7 +926,6 @@ int main(int argc, char* argv[]) {
       bool clear_button_clicked = false;
       clear_button->HandleEventBase(&e, &mousedown, &clear_button_clicked);
       if (clear_button_clicked) {
-        
         // Currently we just do this so that Clear will be added to the undo
         // list. The SetEnabled's on the trigs will also zero ou the drum loop.
         // Revisit this.
@@ -962,14 +961,24 @@ int main(int argc, char* argv[]) {
         screen_needs_update |=
             sound_buttons[i]->HandleEvent(&e, &clicked);
         if (clicked && (drum_loop.Recording() || drum_loop.Paused())) {
+          // TODO: Oh, boy is this a mess...
           int step = drum_loop.CurrentStep();
-          trig_buttons[i][step]->HandleClick();
+          bool erase = SDL_GetModState() & KMOD_SHIFT;
+          if (erase) {
+            trig_buttons[i][step]->SetEnabled(false, true);
+            trig_buttons[i][step]->UpdateStep();
+          } else {
+            trig_buttons[i][step]->SetActive();
+            trig_buttons[i][step]->SetEnabled(true, true);
+            trig_buttons[i][step]->Draw();
+          }
         }
       }
       for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
-        for (int j = 0; j < STEPS_TOTAL; j++)
-        screen_needs_update |=
+        for (int j = 0; j < STEPS_TOTAL; j++) {
+          screen_needs_update |=
             trig_buttons[i][j]->HandleEvent(&e);
+        }
       }
       bool step_button_clicked = false;
       for (int i = 0; i < STEP_BUTTONS_TOTAL; i++) {
@@ -979,7 +988,7 @@ int main(int argc, char* argv[]) {
           break;
         }
       }
-      
+
       // Key event handling that is not dealt with inside the button classes
       if (e.type == SDL_KEYDOWN) {
         switch (e.key.keysym.sym) {
@@ -990,8 +999,16 @@ int main(int argc, char* argv[]) {
               play_button->SetToggled(false);
               rec_button->SetToggled(false);
             } else {
-              drum_loop.Start();
-              play_button->SetToggled(true);
+              if (drum_loop.RecMode() && drum_loop.Paused()) {
+                play_button->SetToggled(false);
+                rec_button->SetToggled(true);
+                drum_loop.StartWithRec();
+              } else {
+                play_button->SetToggled(true);
+                rec_button->SetToggled(false);
+                drum_loop.Start();
+              }
+              pause_button->SetToggled(false);
             }
             break;
           case SDLK_ESCAPE:
@@ -1007,10 +1024,25 @@ int main(int argc, char* argv[]) {
             break;
           case SDLK_RIGHT:
             drum_loop.NextStep();
+            if (!drum_loop.Running()) {
+              if (drum_loop.CurrentStep() != -1) {
+                drum_loop.SetEditMode(true);
+              } else {
+                drum_loop.SetEditMode(false);
+              }
+            }
             screen_needs_update = update_trigs(trig_buttons);
             break;
           case SDLK_LEFT:
             drum_loop.PrevStep();
+            if (!drum_loop.Running()) {
+              if (drum_loop.CurrentStep() != -1) {
+                drum_loop.SetEditMode(true);
+              }
+              else {
+                drum_loop.SetEditMode(false);
+              }
+            }
             screen_needs_update = update_trigs(trig_buttons);
             break;
           case SDLK_b:

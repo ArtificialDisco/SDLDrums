@@ -60,6 +60,7 @@ class DrumLoop
   int CurrentStep();
   void ClearPattern();
   void Init();
+  void SetEditMode(bool edit);
   
   bool Running() { return loop_running_; }
   

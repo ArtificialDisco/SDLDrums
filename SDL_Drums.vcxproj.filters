@@ -43,6 +43,12 @@
     <Filter Include="Resource Files\pattterns">
       <UniqueIdentifier>{e15cf29e-8c2f-47ee-acfe-a30118d14902}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\images\bpm">
+      <UniqueIdentifier>{eafd03a9-8782-4a05-9f93-7857c2ffacd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\images\digits">
+      <UniqueIdentifier>{a69395ae-ad8d-4d5c-a7f0-02a65b7c3230}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="button.cpp">
@@ -360,6 +366,63 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="patterns\main.txt">
       <Filter>Resource Files\pattterns</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_down_1_active.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_down_1_inactive.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_down_10_active.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_down_10_inactive.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_empty.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_up_1_active.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_up_1_inactive.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_up_10_active.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\bpm\bpm_up_10_inactive.png">
+      <Filter>Resource Files\images\bpm</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\0.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\1.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\2.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\3.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\4.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\5.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\6.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\7.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\8.png">
+      <Filter>Resource Files\images\digits</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\digits\9.png">
+      <Filter>Resource Files\images\digits</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

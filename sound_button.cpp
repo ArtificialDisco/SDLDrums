@@ -28,7 +28,8 @@ bool SoundButton::HandleEvent(SDL_Event* e, bool* clicked) {
   if (screen_change) {
     Draw();
   }
-  if (*clicked) {
+  bool shift = SDL_GetModState() & KMOD_SHIFT;
+  if (*clicked && !shift) {
     PlaySample();
   }
   return screen_change;

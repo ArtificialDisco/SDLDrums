@@ -87,7 +87,6 @@ void DrumLoop::Stop() {
   loop_running_ = false;
   paused_ = false;
   current_step_ = STOPPED;
-  rec_mode_ = false;
   SDL_WaitThread(loop_thread_, NULL);
 }
 
@@ -196,6 +195,11 @@ DrumLoop::UndoAction DrumLoop::ApplyUndoAction() {
     CopyPattern(&main_pattern_, p);
   }
   return action;
+}
+
+void DrumLoop::SetEditMode(bool edit) {
+  rec_mode_ = edit;
+  paused_ = edit;
 }
 
 void DrumLoop::Init() {
