@@ -4,7 +4,10 @@
 #include <chrono>
 
 #include "drum_loop.h"
-#include "sdl_drums.h"
+
+//Redefintion that lets us skip including sdl_drums.h
+// Need to find a better place for this.
+const int SOUND_BUTTONS_TOTAL = 9;
 
 DrumLoop::DrumLoop(SoundData* sound_data) {
   sound_data_ = sound_data;

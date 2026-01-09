@@ -3,7 +3,6 @@
 
 #include <vector>
 
-#include "sdl_drums.h"
 #include "sound_data.h"
 
 #define TRACK_MAX 1000
@@ -16,6 +15,8 @@ class DrumLoop
  public:
   DrumLoop(SoundData* sound_data);
   ~DrumLoop();
+
+  static const int STOPPED = -1;
 
   enum ActionType {
     None = 0,
