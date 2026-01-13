@@ -12,9 +12,6 @@
 // State of drum machine
 
 
-// Error codes
-const int INIT_FAILED = 1;
-
 const int SCREEN_WIDTH = 1024;
 const int SCREEN_HEIGHT = 768;
 
@@ -35,20 +32,83 @@ const int Y_MARGIN = 30;
 class SDLDrums {
  public:
   SDLDrums();
+  ~SDLDrums();
   int Run();
 
+  // Error codes
+  const int INIT_FAILED = 1;
+
+  bool InitSDL();
+  bool LoadSoundButtonImgs();
+  bool LoadTrigButtonImgs(SDL_Surface* screen);
+  bool LoadStepButtonImgs(SDL_Surface* screen);
+  bool LoadDigits(SDL_Surface* screen);
+  bool UpdateTrigsFromPattern(DrumLoop::Pattern* p);
+  bool ClearAndUpdateTrigs();
+  bool UpdateTrigs();
+  void DrawBPM(SDL_Surface* surface, SDL_Rect rect, int bpm);
+  void ApplyUndoAction(DrumLoop::UndoAction action, bool undo);
+  void CloseProgram();
+  int InitAllSurfaces(SDL_Surface* screen);
+
  private:
-   std::unique_ptr<SoundButton> sound_buttons[SOUND_BUTTONS_TOTAL];
-   std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL][STEPS_TOTAL];
-   std::unique_ptr<StepButton> step_buttons[STEP_BUTTONS_TOTAL];
+  SDL_Keycode sound_button_keys[SOUND_BUTTONS_TOTAL] = {
+    SDLK_z, SDLK_x, SDLK_c,
+    SDLK_a, SDLK_s, SDLK_d,
+    SDLK_q, SDLK_w, SDLK_e
+  };
+  SoundData sound_data;
+  std::unique_ptr<DrumLoop> drum_loop;
+  SDL_Rect bpm_indicator_rect;
 
-   std::unique_ptr<ControlButton> play_button;
-   std::unique_ptr<ControlButton> rec_button;
-   std::unique_ptr<ControlButton> pause_button;
+  std::unique_ptr<SoundButton> sound_buttons[SOUND_BUTTONS_TOTAL];
+  std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL][STEPS_TOTAL];
+  std::unique_ptr<StepButton> step_buttons[STEP_BUTTONS_TOTAL];
 
-   std::unique_ptr<Button> undo_button;
-   std::unique_ptr<Button> redo_button;
-   std::unique_ptr<Button> clear_button;
+  std::unique_ptr<ControlButton> play_button;
+  std::unique_ptr<ControlButton> rec_button;
+  std::unique_ptr<ControlButton> pause_button;
+
+  std::unique_ptr<Button> undo_button;
+  std::unique_ptr<Button> redo_button;
+  std::unique_ptr<Button> clear_button;
+
+  std::unique_ptr<Button> bpm_10_up_button;
+  std::unique_ptr<Button> bpm_10_down_button;
+  std::unique_ptr<Button> bpm_1_up_button;
+  std::unique_ptr<Button> bpm_1_down_button;
+
+  SDL_Surface* sound_buttons_inactive[SOUND_BUTTONS_TOTAL];
+  SDL_Surface* sound_buttons_active[SOUND_BUTTONS_TOTAL];
+  SDL_Surface* trig_button_icons[SOUND_BUTTONS_TOTAL];
+  SDL_Surface* step_button_icons[STEP_BUTTONS_TOTAL];
+  SDL_Surface* digit_imgs[10];
+
+  SDL_Surface* play_button_inactive_surface;
+  SDL_Surface* play_button_active_surface;
+  SDL_Surface* stop_button_surface;
+  SDL_Surface* rec_button_surface;
+  SDL_Surface* pause_button_surface;
+  SDL_Surface* pause_button_toggled_surface;
+
+  SDL_Surface* undo_button_surface;
+  SDL_Surface* redo_button_surface;
+  SDL_Surface* clear_button_surface;
+
+  SDL_Surface* bpm_up_10_inactive_surface;
+  SDL_Surface* bpm_up_10_active_surface;
+  SDL_Surface* bpm_up_1_inactive_surface;
+  SDL_Surface* bpm_up_1_active_surface;
+
+  SDL_Surface* bpm_down_10_inactive_surface;
+  SDL_Surface* bpm_down_10_active_surface;
+  SDL_Surface* bpm_down_1_inactive_surface;
+  SDL_Surface* bpm_down_1_active_surface;
+
+  SDL_Surface* bpm_empty_surface;
+
+  SDL_Surface* empty_slot_surface;
+  SDL_Surface* active_empty_slot_surface;
 };
 
 const char* samples_files[] = {

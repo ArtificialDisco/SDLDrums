@@ -159,6 +159,7 @@
     <ClCompile Include="sound_data.cpp" />
     <ClCompile Include="step_button.cpp" />
     <ClCompile Include="trig_button.cpp" />
+    <ClCompile Include="util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="button.h" />
@@ -169,6 +170,7 @@
     <ClInclude Include="sound_data.h" />
     <ClInclude Include="step_button.h" />
     <ClInclude Include="trig_button.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
     <CopyFileToFolders Include="SDL2.dll">

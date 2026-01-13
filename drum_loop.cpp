@@ -168,7 +168,6 @@ DrumLoop::UndoAction DrumLoop::Undo() {
     return action;
   }
   current_undo--;
-  PrintUndoEntries();
   return ApplyUndoAction();
 }
 

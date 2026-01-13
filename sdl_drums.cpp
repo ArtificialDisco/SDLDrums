@@ -16,52 +16,7 @@
 #include "sdl_drums.h"
 #include "drum_loop.h"
 #include "sound_data.h"
-
-SDL_Surface* sound_buttons_inactive[SOUND_BUTTONS_TOTAL];
-SDL_Surface* sound_buttons_active[SOUND_BUTTONS_TOTAL];
-SDL_Surface* trig_button_icons[SOUND_BUTTONS_TOTAL];
-SDL_Surface* step_button_icons[STEP_BUTTONS_TOTAL];
-SDL_Surface* digit_imgs[10]; 
-
-SDL_Surface* play_button_inactive_surface;
-SDL_Surface* play_button_active_surface;
-SDL_Surface* stop_button_surface;
-SDL_Surface* rec_button_surface;
-SDL_Surface* pause_button_surface;
-SDL_Surface* pause_button_toggled_surface;
-
-SDL_Surface* undo_button_surface;
-SDL_Surface* redo_button_surface;
-SDL_Surface* clear_button_surface;
-
-SDL_Surface* bpm_up_10_inactive_surface;
-SDL_Surface* bpm_up_10_active_surface;
-SDL_Surface* bpm_up_1_inactive_surface;
-SDL_Surface* bpm_up_1_active_surface;
-
-SDL_Surface* bpm_down_10_inactive_surface;
-SDL_Surface* bpm_down_10_active_surface;
-SDL_Surface* bpm_down_1_inactive_surface;
-SDL_Surface* bpm_down_1_active_surface;
-
-SDL_Surface* bpm_empty_surface;
-
-SDL_Surface* empty_slot_surface;
-SDL_Surface* active_empty_slot_surface;
-
-// Keep track of all surfaces so we can free them correctly
-// Total surfaces are currently 64. Update this when needed.
-SDL_Surface* all_surfaces[70];
-int total_surfaces = 0;
-
-void free_surfaces() {
-  for (int i = 0; i < total_surfaces; i++) {
-    SDL_FreeSurface(all_surfaces[i]);
-  }
-}
-
-SDL_Window* window;
-SDL_Surface* screen = NULL;
+#include "util.h"
 
 Uint32 next_time;
 
@@ -75,107 +30,25 @@ Uint32 time_left(void)
 		return next_time - now;
 }
 
-void putpixel(SDL_Surface* surface, int x, int y, Uint32 pixel)
-{
-  int bpp = surface->format->BytesPerPixel;
-  Uint8* p = (Uint8*)surface->pixels + y * surface->pitch + x * bpp;
+/////////// TODO: Should belong to SDLDrums as well
+SDL_Window* window;
+SDL_Surface* screen = NULL;
 
-  if (x > surface->w || x < 0) return;
-  if (y > surface->h || y < 0) return;
+SDL_Rect scope_rect = { 367, 175, 300, 200 };
+void MixFunc(void* udata, Uint8* stream, int len) {
+  SDL_Surface* surface = (SDL_Surface*)udata;
 
-  switch (bpp) {
-  case 1:
-    *p = pixel;
-    break;
-  case 2:
-    *(Uint16*)p = pixel;
-    break;
-  case 3:
-    if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-      p[0] = (pixel >> 16) & 0xff;
-      p[1] = (pixel >> 8) & 0xff;
-      p[2] = pixel & 0xff;
-    }
-    else {
-      p[0] = pixel & 0xff;
-      p[1] = (pixel >> 8) & 0xff;
-      p[2] = (pixel >> 16) & 0xff;
-    }
-    break;
-  case 4:
-    *(Uint32*)p = pixel;
-    break;
-  }
+  SDL_Rect srcrect = { 0, 0, 300, 200 };
+  //SDL_Rect dstrect = { 350, 125, 300, 200 };
+  SDL_FillRect(surface, &srcrect, SDL_MapRGB(screen->format, 0, 0, 0));
+  draw_sample(surface, stream, len, SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a));
+  SDL_BlitSurface(surface, nullptr, screen, &scope_rect);
+  SDL_UpdateWindowSurface(window);
 }
-
-void draw_border(SDL_Surface* surface, SDL_Rect rect)
-{
-  SDL_Rect top, bottom, left, right;
-  Uint32 yellow = SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a);
-
-  top.x = rect.x-1, top.y = rect.y-1;
-  top.w = rect.w+2, top.h = 2;
-
-  left.x = rect.x-1, left.y = rect.y-1;
-  left.w = 2, left.h = rect.h + 2;
-
-  bottom.x = rect.x-1, bottom.y = rect.y + rect.h + 1;
-  bottom.w = rect.w+2, bottom.h = 1;
-
-  right.x = rect.x + rect.w, right.y = rect.y;
-  right.w = 1, right.h = rect.h+1;
-
-  SDL_FillRect(surface, &top, yellow);
-  SDL_FillRect(surface, &left, yellow);
-  SDL_FillRect(surface, &bottom, yellow);
-  SDL_FillRect(surface, &right, yellow);
-}
+//////////
 
 
-static void draw_sample(SDL_Surface* screen, Uint8* abuf, int len, Uint32 color) {
-  Uint16 format;
-  int channels, incr;
-  Sint16* buffer16;
-  Sint32* buffer32;
-
-  Mix_QuerySpec(NULL, &format, &channels);
-  incr = (format & 0xFF) * channels;
-
-  unsigned long int i;
-  unsigned long int length = len/2;
-  switch (format & 0xFF) {
-  case 16:
-    buffer16 = reinterpret_cast<Sint16*>(abuf);
-    for (i = 0; i < length; i += 2) {
-      Sint16 current_l = *(buffer16);
-      Sint16 current_r = *(buffer16 + 1);
-      putpixel(screen, i * screen->w / length,
-        screen->h / 2 +
-        ((current_l + current_r) / 2 * (screen->h)) / (2 << 16),
-        color);
-      buffer16 += 2;
-    }
-    break;
-  case 32:
-    buffer32 = reinterpret_cast<Sint32*>(abuf);
-    for (i = 0; i < length; i += 4) {
-      Sint32 current_l = *(buffer32);
-      Sint32 current_r = *(buffer32 + 1);
-      putpixel(screen, i * screen->w / length,
-        screen->h / 2ll + 100ll +
-        ((current_l) * (screen->h / 2ll)) / (2ll << 32ll),
-        color);
-      putpixel(screen, i * screen->w / length,
-        screen->h / 2ll - 100ll +
-        ((current_r) * (screen->h / 2ll)) / (2ll << 32ll),
-        color);
-      buffer32 += 2;
-    }
-    break;
-  }
-}
-
-bool init_sdl() {
+bool SDLDrums::InitSDL() {
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
     printf("SDL could not be initialized: %s\n", SDL_GetError());
     return false;
@@ -208,52 +81,27 @@ bool init_sdl() {
   return true;
 }
 
-SDL_Surface *load_surface(SDL_Surface *screen, const char *path,
-                          bool optimize = true) {
-  SDL_Surface* optimizedSurface = NULL;
 
-  SDL_Surface* loadedSurface = IMG_Load(path);
-  if (loadedSurface == NULL) {
-    printf( "Unable to load image %s!\nSDL_image Error: %s\n", path, IMG_GetError() );
-  } else {
-    if (!optimize) {
-      all_surfaces[total_surfaces++] = optimizedSurface;
-      return loadedSurface;
-    }
-    optimizedSurface = SDL_ConvertSurface(loadedSurface, screen->format, 0);
-    if (optimizedSurface == NULL) {
-        printf( "Unable to optimize image %s!\nSDL Error: %s\n", path, SDL_GetError() );
-    }
 
-    //Get rid of old loaded surface
-    SDL_FreeSurface(loadedSurface);
-  }
-
-  all_surfaces[total_surfaces++] = optimizedSurface;
-  return optimizedSurface;
-}
-
-bool load_sound_button_imgs(SDL_Surface* screen,
-                            SDL_Surface* buttons_inactive[SOUND_BUTTONS_TOTAL],
-                            SDL_Surface* buttons_active[SOUND_BUTTONS_TOTAL]) {
+bool SDLDrums::LoadSoundButtonImgs() {
   // Make sure all surfaces are init'd as null, since if we fail at file
   // number i we need to free every surface from 0 to i, which involves
   // null-checking.
   for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
-    buttons_inactive[i] = buttons_active[i] = nullptr;
+    sound_buttons_inactive[i] = sound_buttons_active[i] = nullptr;
   }
 
   for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
-    buttons_inactive[i] = load_surface(screen, sound_buttons_inactive_files[i]);
-    buttons_active[i] = load_surface(screen, sound_buttons_active_files[i]);
-    if (buttons_inactive[i] == NULL || buttons_active[i] == NULL) {
+    sound_buttons_inactive[i] = load_surface(screen, sound_buttons_inactive_files[i]);
+    sound_buttons_active[i] = load_surface(screen, sound_buttons_active_files[i]);
+    if (sound_buttons_inactive[i] == NULL || sound_buttons_active[i] == NULL) {
       return false;
     }
   }
   return true;
 }
 
-bool load_trig_button_imgs(SDL_Surface* screen) {
+bool SDLDrums::LoadTrigButtonImgs(SDL_Surface* screen) {
   for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
     trig_button_icons[i] = nullptr;
   }
@@ -266,7 +114,7 @@ bool load_trig_button_imgs(SDL_Surface* screen) {
   return true;
 }
 
-bool load_step_button_imgs(SDL_Surface *screen) {
+bool SDLDrums::LoadStepButtonImgs(SDL_Surface *screen) {
   for (int i = 0; i < STEP_BUTTONS_TOTAL; i++) {
     step_button_icons[i] = nullptr;
   }
@@ -279,7 +127,7 @@ bool load_step_button_imgs(SDL_Surface *screen) {
   return true;
 }
 
-bool load_digits(SDL_Surface* screen) {
+bool SDLDrums::LoadDigits(SDL_Surface* screen) {
   
   for (int i = 0; i < 10; i++) {
     digit_imgs[i] = nullptr;
@@ -294,9 +142,7 @@ bool load_digits(SDL_Surface* screen) {
 }
 
 // TODO: Repetition from update_trigs. 
-bool update_trigs_from_pattern(DrumLoop::Pattern* p,
-    std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL]
-                                            [STEPS_TOTAL]) {
+bool SDLDrums::UpdateTrigsFromPattern(DrumLoop::Pattern* p) {
   bool screen_needs_update = false;
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 32; j++) {
@@ -309,8 +155,7 @@ bool update_trigs_from_pattern(DrumLoop::Pattern* p,
   return screen_needs_update;
 }
 
-bool clear_and_update_trigs(std::unique_ptr<TrigButton> trig_buttons
-    [SOUND_BUTTONS_TOTAL][STEPS_TOTAL]) {
+bool SDLDrums::ClearAndUpdateTrigs() {
   bool screen_needs_update = false;
   for (int i = 0; i < 9; i++) {
     for (int j = 0; j < 32; j++) {
@@ -322,8 +167,7 @@ bool clear_and_update_trigs(std::unique_ptr<TrigButton> trig_buttons
   return screen_needs_update;
 }
 
-bool update_trigs(std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL]
-                                                          [STEPS_TOTAL]) {
+bool SDLDrums::UpdateTrigs() {
   bool screen_needs_update = false;
   for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
     for (int j = 0; j < STEPS_TOTAL; j++) {
@@ -334,7 +178,7 @@ bool update_trigs(std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL]
   return screen_needs_update;
 }
 
-void draw_bpm(SDL_Surface* surface, SDL_Rect rect, int bpm) {
+void SDLDrums::DrawBPM(SDL_Surface* surface, SDL_Rect rect, int bpm) {
   short d3 = bpm % 10; bpm /= 10;
   short d2 = bpm % 10; bpm /= 10;
   short d1 = bpm % 10;
@@ -350,9 +194,7 @@ void draw_bpm(SDL_Surface* surface, SDL_Rect rect, int bpm) {
 
 // True for undo, false for redo. Maybe confusing? Should use enum despite the boolean
 // nature of this?
-void apply_undo_action(DrumLoop::UndoAction action,
-    std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL][STEPS_TOTAL],
-    bool undo) {
+void SDLDrums::ApplyUndoAction(DrumLoop::UndoAction action, bool undo) {
   if (action.type == DrumLoop::TrigEdit) {
     DrumLoop::TrigEntry* entry = ((DrumLoop::TrigEntry*)(action.data));
     int track = entry->track;
@@ -362,25 +204,26 @@ void apply_undo_action(DrumLoop::UndoAction action,
     bool value = (undo && data == '0') ||
                  (!undo && data == '1') ? true : false;
     trig_buttons[track][step]->SetEnabled(value, false);
-    update_trigs(trig_buttons);
+    UpdateTrigs();
   } else if (action.type == DrumLoop::ClearAll) {
     if (undo) {
       DrumLoop::Pattern* p = (DrumLoop::Pattern*)(action.data);
-      update_trigs_from_pattern(p, trig_buttons);
+      UpdateTrigsFromPattern(p);
     } else {
-      clear_and_update_trigs(trig_buttons);
+      ClearAndUpdateTrigs();
     }
   }
 }
 
-void close_program() {
+void SDLDrums::CloseProgram() {
+  printf("Closing program.\n");
   SDL_DestroyWindow(window);
   Mix_Quit();
   IMG_Quit();
   SDL_Quit();
 }
 
-int init_all_surfaces(SDL_Surface* screen) {
+int SDLDrums::InitAllSurfaces(SDL_Surface* screen) {
   play_button_inactive_surface =
     load_surface(screen, play_button_inactive_file, false);
   play_button_active_surface =
@@ -423,20 +266,19 @@ int init_all_surfaces(SDL_Surface* screen) {
     return INIT_FAILED;
   }
 
-  if (!load_sound_button_imgs(screen, sound_buttons_inactive,
-    sound_buttons_active)) {
+  if (!LoadSoundButtonImgs()) {
     return INIT_FAILED;
   }
 
-  if (!load_trig_button_imgs(screen)) {
+  if (!LoadTrigButtonImgs(screen)) {
     return INIT_FAILED;
   }
 
-  if (!load_step_button_imgs(screen)) {
+  if (!LoadStepButtonImgs(screen)) {
     return INIT_FAILED;
   }
 
-  if (!load_digits(screen)) {
+  if (!LoadDigits(screen)) {
     return INIT_FAILED;
   }
 
@@ -450,37 +292,11 @@ int init_all_surfaces(SDL_Surface* screen) {
   if (!undo_button_surface || !redo_button_surface || !clear_button_surface) {
     return INIT_FAILED;
   }
-
-}
-
-Uint32 yellow;
-SDL_Rect scope_rect = { 367, 175, 300, 200 };
-void mix_func(void* udata, Uint8* stream, int len) {
-  SDL_Surface* surface = (SDL_Surface*)udata;
-  
-  SDL_Rect srcrect = { 0, 0, 300, 200 };
-  //SDL_Rect dstrect = { 350, 125, 300, 200 };
-  SDL_FillRect(surface, &srcrect, SDL_MapRGB(screen->format, 0, 0, 0));
-  draw_sample(surface, stream, len, SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a));
-  SDL_BlitSurface(surface, nullptr, screen, &scope_rect);
-  SDL_UpdateWindowSurface(window);
 }
 
 SDLDrums::SDLDrums() {
-
-}
-
-int SDLDrums::Run() {
-  SDL_Keycode sound_button_keys[SOUND_BUTTONS_TOTAL] = {
-    SDLK_z, SDLK_x, SDLK_c,
-    SDLK_a, SDLK_s, SDLK_d,
-    SDLK_q, SDLK_w, SDLK_e
-  };
-  SoundData sound_data;
-
-  if (!init_sdl()) {
-    close_program();
-    return INIT_FAILED;
+  if (!InitSDL()) {
+    CloseProgram();
   }
 
   const Uint32 black = SDL_MapRGB(screen->format, 0, 0, 0);
@@ -493,13 +309,15 @@ int SDLDrums::Run() {
   draw_border(screen, scope_rect);
 
   if (!sound_data.LoadSamples(samples_files)) {
-    close_program();
-    return INIT_FAILED;
+    CloseProgram();
   }
 
-  if (init_all_surfaces(screen) == INIT_FAILED) {
+  // Init drum loop and create sequencer
+  drum_loop = std::make_unique<DrumLoop>(&sound_data);
+
+  if (InitAllSurfaces(screen) == INIT_FAILED) {
     free_surfaces();
-    close_program();
+    CloseProgram();
   }
 
   // Init sound pads
@@ -529,13 +347,13 @@ int SDLDrums::Run() {
   bpm_rect.y = Y_MARGIN;
   bpm_rect.w = bpm_up_10_inactive_surface->w;
   bpm_rect.h = bpm_up_10_inactive_surface->h;
-  std::unique_ptr<Button> bpm_10_up_button = std::make_unique<Button>(
+  bpm_10_up_button = std::make_unique<Button>(
     screen, bpm_up_10_active_surface, bpm_up_10_inactive_surface, nullptr,
     bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
   bpm_10_up_button->Draw();
 
   bpm_rect.y += bpm_up_10_inactive_surface->h + 5;
-  std::unique_ptr<Button> bpm_10_down_button = std::make_unique<Button>(
+  bpm_10_down_button = std::make_unique<Button>(
     screen, bpm_down_10_active_surface, bpm_down_10_inactive_surface, nullptr,
     bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
   bpm_10_down_button->Draw();
@@ -544,29 +362,25 @@ int SDLDrums::Run() {
   bpm_rect.y = Y_MARGIN;
   bpm_rect.w = bpm_up_1_inactive_surface->w;
   bpm_rect.h = bpm_up_1_inactive_surface->h;
-  std::unique_ptr<Button> bpm_1_up_button = std::make_unique<Button>(
+  bpm_1_up_button = std::make_unique<Button>(
     screen, bpm_up_1_active_surface, bpm_up_1_inactive_surface, nullptr,
     bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
   bpm_1_up_button->Draw();
 
   bpm_rect.y += bpm_up_1_inactive_surface->h + 5;
-  std::unique_ptr<Button> bpm_1_down_button = std::make_unique<Button>(
+  bpm_1_down_button = std::make_unique<Button>(
     screen, bpm_down_1_active_surface, bpm_down_1_inactive_surface, nullptr,
     bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
   bpm_1_down_button->Draw();
 
-  const SDL_Rect bpm_indicator_rect =
+  bpm_indicator_rect =
   { bpm_rect.x + 60, bpm_rect.y - 20, bpm_rect.w, bpm_rect.h };
 
   bpm_rect.x += bpm_up_1_active_surface->w + 10;
   bpm_rect.y = Y_MARGIN;
   SDL_BlitSurface(bpm_empty_surface, nullptr, screen, &bpm_rect);
 
-  // Init drum loop and create sequencer
-  DrumLoop drum_loop(&sound_data);
-
-
-  draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+  DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
 
   SDL_Rect trig_rect;
   trig_rect.x = X_MARGIN;
@@ -579,12 +393,12 @@ int SDLDrums::Run() {
     for (int j = 0; j < STEPS_TOTAL; j++) {
       trig_buttons[i][j] = std::make_unique<TrigButton>(
         screen, active_empty_slot_surface, empty_slot_surface,
-        trig_button_icons[i], trig_rect, &drum_loop);
+        trig_button_icons[i], trig_rect, drum_loop.get());
 
       // TODO: A little counter-intuitive having to do this.
       trig_buttons[i][j]->SetInactive();
 
-      if (drum_loop.GetTrig(i, j) != '0') {
+      if (drum_loop->GetTrig(i, j) != '0') {
         trig_buttons[i][j]->Enable();
       }
       trig_buttons[i][j]->SetTrack(i);
@@ -673,7 +487,15 @@ int SDLDrums::Run() {
   clear_button->Draw();
 
   SDL_UpdateWindowSurface(window);
+  Mix_SetPostMix(MixFunc, scope);
+}
 
+SDLDrums::~SDLDrums() {
+  free_surfaces();
+  CloseProgram();
+}
+
+int SDLDrums::Run() {
   // Main event loop
   SDL_Event e;
   bool quit = false;
@@ -681,14 +503,12 @@ int SDLDrums::Run() {
   int current_step = -1;
   bool screen_needs_update;
 
-  Mix_SetPostMix(mix_func, scope);
-
   while (quit == false) {
     screen_needs_update = false;
-    if (drum_loop.Running()) {
-      int step = drum_loop.CurrentStep();
+    if (drum_loop->Running()) {
+      int step = drum_loop->CurrentStep();
       if (step != current_step) {
-        screen_needs_update = update_trigs(trig_buttons);
+        screen_needs_update = UpdateTrigs();
         current_step = step;
       }
     }
@@ -711,29 +531,29 @@ int SDLDrums::Run() {
       screen_needs_update |=
         play_button->HandleEvent(&e, &play_clicked);
       if (play_clicked) {
-        if (drum_loop.Running()) {
-          if (drum_loop.Recording()) {
+        if (drum_loop->Running()) {
+          if (drum_loop->Recording()) {
             play_button->SetToggled(true);
             rec_button->SetToggled(false);
             pause_button->SetToggled(false);
-            drum_loop.SetRec(false);
+            drum_loop->SetRec(false);
           }
           else {
-            drum_loop.Stop();
-            update_trigs(trig_buttons);
+            drum_loop->Stop();
+            UpdateTrigs();
             play_button->SetToggled(false);
             pause_button->SetToggled(false);
           }
         }
         else {
-          if (drum_loop.Paused() && !drum_loop.RecMode()) {
-            drum_loop.Stop();
+          if (drum_loop->Paused() && !drum_loop->RecMode()) {
+            drum_loop->Stop();
             play_button->SetToggled(false);
             pause_button->SetToggled(false);
-            update_trigs(trig_buttons);
+            UpdateTrigs();
           }
           else {
-            drum_loop.Start();
+            drum_loop->Start();
             play_button->SetToggled(true);
             rec_button->SetToggled(false);
             pause_button->SetToggled(false);
@@ -745,29 +565,29 @@ int SDLDrums::Run() {
       screen_needs_update |=
         rec_button->HandleEvent(&e, &rec_clicked);
       if (rec_clicked) {
-        if (drum_loop.Running()) {
-          if (!drum_loop.RecMode()) {
+        if (drum_loop->Running()) {
+          if (!drum_loop->RecMode()) {
             play_button->SetToggled(false);
             rec_button->SetToggled(true);
-            drum_loop.SetRec(true);
+            drum_loop->SetRec(true);
           }
           else {
             rec_button->SetToggled(false);
-            drum_loop.Stop();
-            update_trigs(trig_buttons);
+            drum_loop->Stop();
+            UpdateTrigs();
           }
         }
         else {
-          if (drum_loop.Paused() && drum_loop.RecMode()) {
+          if (drum_loop->Paused() && drum_loop->RecMode()) {
             play_button->SetToggled(false);
             rec_button->SetToggled(false);
             pause_button->SetToggled(false);
-            drum_loop.Stop();
-            update_trigs(trig_buttons);
+            drum_loop->Stop();
+            UpdateTrigs();
           }
           else {
             play_button->SetToggled(false);
-            drum_loop.StartWithRec();
+            drum_loop->StartWithRec();
             rec_button->SetToggled(true);
             pause_button->SetToggled(false);
           }
@@ -778,19 +598,19 @@ int SDLDrums::Run() {
       screen_needs_update |=
         pause_button->HandleEvent(&e, &pause_clicked);
       if (pause_clicked) {
-        if (drum_loop.Running()) {
-          drum_loop.Pause();
-          update_trigs(trig_buttons);
+        if (drum_loop->Running()) {
+          drum_loop->Pause();
+          UpdateTrigs();
           pause_button->SetToggled(true);
         }
         else {
-          if (drum_loop.Paused()) {
-            if (drum_loop.RecMode()) {
-              drum_loop.StartWithRec();
+          if (drum_loop->Paused()) {
+            if (drum_loop->RecMode()) {
+              drum_loop->StartWithRec();
               pause_button->SetToggled(false);
             }
             else {
-              drum_loop.Start();
+              drum_loop->Start();
               pause_button->SetToggled(false);
             }
           }
@@ -808,20 +628,20 @@ int SDLDrums::Run() {
       screen_needs_update = bpm_1_down_button->HandleEvent(&e, &bpm_1_down_clicked);
 
       if (bpm_10_up_clicked) {
-        drum_loop.SpeedUp(10);
-        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+        drum_loop->SpeedUp(10);
+        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
       }
       else if (bpm_1_up_clicked) {
-        drum_loop.SpeedUp(1);
-        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+        drum_loop->SpeedUp(1);
+        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
       }
       else if (bpm_10_down_clicked) {
-        drum_loop.SpeedUp(-10);
-        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+        drum_loop->SpeedUp(-10);
+        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
       }
       else if (bpm_1_down_clicked) {
-        drum_loop.SpeedUp(-1);
-        draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+        drum_loop->SpeedUp(-1);
+        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
       }
 
       bool mousedown = false;
@@ -831,13 +651,13 @@ int SDLDrums::Run() {
         // Currently we just do this so that Clear will be added to the undo
         // list. The SetEnabled's on the trigs will also zero ou the drum loop.
         // Revisit this.
-        drum_loop.ClearPattern();
+        drum_loop->ClearPattern();
 
         for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
           for (int j = 0; j < STEPS_TOTAL; j++)
             trig_buttons[i][j]->SetEnabled(false, false);
         }
-        update_trigs(trig_buttons);
+        UpdateTrigs();
         screen_needs_update = true;
       }
 
@@ -845,16 +665,16 @@ int SDLDrums::Run() {
       undo_button->HandleEventBase(&e, &mousedown,
         &undo_button_clicked);
       if (undo_button_clicked) {
-        DrumLoop::UndoAction action = drum_loop.Undo();
-        apply_undo_action(action, trig_buttons, true);
+        DrumLoop::UndoAction action = drum_loop->Undo();
+        ApplyUndoAction(action, true);
         screen_needs_update = true;
       }
 
       bool redo_button_clicked = false;
       redo_button->HandleEventBase(&e, &mousedown, &redo_button_clicked);
       if (redo_button_clicked) {
-        DrumLoop::UndoAction action = drum_loop.Redo();
-        apply_undo_action(action, trig_buttons, false);
+        DrumLoop::UndoAction action = drum_loop->Redo();
+        ApplyUndoAction(action, false);
         screen_needs_update = true;
       }
 
@@ -862,9 +682,9 @@ int SDLDrums::Run() {
         bool clicked = false;
         screen_needs_update |=
           sound_buttons[i]->HandleEvent(&e, &clicked);
-        if (clicked && (drum_loop.Recording() || drum_loop.Paused())) {
+        if (clicked && (drum_loop->Recording() || drum_loop->Paused())) {
           // TODO: Oh, boy is this a mess...
-          int step = drum_loop.CurrentStep();
+          int step = drum_loop->CurrentStep();
           bool erase = SDL_GetModState() & KMOD_SHIFT;
           if (erase) {
             trig_buttons[i][step]->SetEnabled(false, true);
@@ -896,22 +716,22 @@ int SDLDrums::Run() {
       if (e.type == SDL_KEYDOWN) {
         switch (e.key.keysym.sym) {
         case SDLK_SPACE:
-          if (drum_loop.Running()) {
-            drum_loop.Stop();
-            screen_needs_update |= update_trigs(trig_buttons);
+          if (drum_loop->Running()) {
+            drum_loop->Stop();
+            screen_needs_update |= UpdateTrigs();
             play_button->SetToggled(false);
             rec_button->SetToggled(false);
           }
           else {
-            if (drum_loop.RecMode() && drum_loop.Paused()) {
+            if (drum_loop->RecMode() && drum_loop->Paused()) {
               play_button->SetToggled(false);
               rec_button->SetToggled(true);
-              drum_loop.StartWithRec();
+              drum_loop->StartWithRec();
             }
             else {
               play_button->SetToggled(true);
               rec_button->SetToggled(false);
-              drum_loop.Start();
+              drum_loop->Start();
             }
             pause_button->SetToggled(false);
           }
@@ -920,39 +740,39 @@ int SDLDrums::Run() {
           quit = true;
           break;
         case SDLK_UP:
-          drum_loop.SpeedUp(10);
-          draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+          drum_loop->SpeedUp(10);
+          DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
           break;
         case SDLK_DOWN:
-          drum_loop.SlowDown(10);
-          draw_bpm(screen, bpm_indicator_rect, drum_loop.GetBPM());
+          drum_loop->SlowDown(10);
+          DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
           break;
         case SDLK_RIGHT:
-          drum_loop.NextStep();
-          if (!drum_loop.Running()) {
-            if (drum_loop.CurrentStep() != -1) {
-              drum_loop.SetEditMode(true);
+          drum_loop->NextStep();
+          if (!drum_loop->Running()) {
+            if (drum_loop->CurrentStep() != -1) {
+              drum_loop->SetEditMode(true);
             }
             else {
-              drum_loop.SetEditMode(false);
+              drum_loop->SetEditMode(false);
             }
           }
-          screen_needs_update = update_trigs(trig_buttons);
+          screen_needs_update = UpdateTrigs();
           break;
         case SDLK_LEFT:
-          drum_loop.PrevStep();
-          if (!drum_loop.Running()) {
-            if (drum_loop.CurrentStep() != -1) {
-              drum_loop.SetEditMode(true);
+          drum_loop->PrevStep();
+          if (!drum_loop->Running()) {
+            if (drum_loop->CurrentStep() != -1) {
+              drum_loop->SetEditMode(true);
             }
             else {
-              drum_loop.SetEditMode(false);
+              drum_loop->SetEditMode(false);
             }
           }
-          screen_needs_update = update_trigs(trig_buttons);
+          screen_needs_update = UpdateTrigs();
           break;
         case SDLK_b:
-          printf("%i\n", drum_loop.CurrentStep());
+          printf("%i\n", drum_loop->CurrentStep());
           break;
         }
       }
@@ -964,16 +784,10 @@ int SDLDrums::Run() {
     next_time += TICK_INTERVAL;
     SDL_Delay(time_left());
   }
-
-  // Cleanup everything
-  free_surfaces();
-  close_program();
   return 0;
 }
-
 
 int main(int argc, char* argv[]) {
   SDLDrums app;
   return app.Run();
 }
-
