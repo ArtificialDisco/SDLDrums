@@ -63,7 +63,7 @@ bool SDLDrums::InitSDL() {
     return false;
   }
 
-  if (Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 512) != 0) {
+  if (Mix_OpenAudio(SampleRate, AUDIO_S16SYS, 2, 512) != 0) {
     printf("SDL_mixer could not initialize! SDL_mixer Error: %s\n",
            Mix_GetError());
     return false;
