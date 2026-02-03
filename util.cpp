@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "util.h"
+#include "sound_data.h"
 
 // Keep track of all surfaces so we can free them correctly
 // Total surfaces are currently 64. Update this when needed.
@@ -148,8 +149,10 @@ void draw_sample(SDL_Surface* screen, Uint8* abuf, int len, Uint32 color) {
 Uint8 delayBuffer[88200];
 int db_idx = 0;
 int delay_init = 0;
+int milliseconds = 500;
 
-void apply_delay(Uint8* abuf, int len, int milliseconds) {
+void apply_delay(int chan, void* abuf, int len, void* data) {
+  printf("apply_delay\n");
   if (delay_init == 0) {
     for (int i = 0; i < 88200; i++) {
       delayBuffer[i] = 0;
@@ -159,21 +162,27 @@ void apply_delay(Uint8* abuf, int len, int milliseconds) {
 
   Sint16* delayBuffer16 = (Sint16*)delayBuffer;
   Sint16* abuf16 = (Sint16*)abuf;
-  int nsamples = SampleRate / 1000 * milliseconds;
+  int nsamples = SampleRate / 1000.0 * milliseconds;
 
   for (int i = 0; i < len / 2; i += 2) {
     delayBuffer16[db_idx] = abuf16[i];
     delayBuffer16[db_idx + 1] = abuf16[i + 1];
 
-    abuf16[i] = abuf16[i + 1] * 0.8 +
-                delayBuffer16[((db_idx + 1 - nsamples) + SampleRate) % SampleRate] * 0.2;
-    abuf16[i + 1] = abuf16[i] * 0.8 +
-                    delayBuffer16[((db_idx - nsamples) + SampleRate) % SampleRate] * 0.2;
+    abuf16[i] = abuf16[i + 1] * 0.5 +
+                delayBuffer16[((db_idx + 1 - nsamples) + SampleRate) % SampleRate] * 0.5;
+    abuf16[i + 1] = abuf16[i] * 0.5 +
+                    delayBuffer16[((db_idx - nsamples) + SampleRate) % SampleRate] * 0.5;
 
     db_idx += 2;
 
     if (db_idx == 44100) {
+      printf("Reset Buffer\n");
       db_idx = 0;
     }
   }
+  printf("%i\n", db_idx);
+}
+
+void apply_delay_post(int chan, void* data) {
+
 }

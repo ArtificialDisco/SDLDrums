@@ -64,7 +64,8 @@ void DrumLoop::Start() {
   loop_running_ = true;
   paused_ = false;
   rec_mode_ = false;
-  loop_thread_ = SDL_CreateThread(StaticLoopFunc, "Hello!", this);
+  //if (!loop_thread_)
+    loop_thread_ = SDL_CreateThread(StaticLoopFunc, "Hello!", this);
 }
 
 void DrumLoop::SetRec(bool rec) {
@@ -75,7 +76,8 @@ void DrumLoop::StartWithRec() {
   loop_running_ = true;
   paused_ = false;
   rec_mode_ = true;
-  loop_thread_ = SDL_CreateThread(StaticLoopFunc, "Hello!", this);
+  //if (!loop_thread_)
+    loop_thread_ = SDL_CreateThread(StaticLoopFunc, "Hello!", this);
 }
 
 bool DrumLoop::Recording() {
@@ -90,7 +92,7 @@ void DrumLoop::Stop() {
   loop_running_ = false;
   paused_ = false;
   current_step_ = STOPPED;
-  SDL_WaitThread(loop_thread_, NULL);
+  //SDL_WaitThread(loop_thread_, NULL);
 }
 
 void DrumLoop::Pause() {
@@ -270,6 +272,7 @@ bool DrumLoop::IsPatternEmpty(Pattern *p) {
 
 int DrumLoop::LoopFunc(void* thread_data) {
   int step_length = (int)(60000.0 / (bpm_ * 4.0));
+  int nsamples = step_length*SampleRate * 2 / 1000;
   int channel = -1;
   int delay;
   int loop_length = 32;
@@ -282,10 +285,11 @@ int DrumLoop::LoopFunc(void* thread_data) {
   int* step = &(((DrumLoop*)thread_data)->current_step_);
   //*step = -1;
   int last_bpm = bpm_;
+  //while (true)
   while (loop_running_) {
     if (last_bpm != bpm_) {
       step_length = (int)(60000.0 / (bpm_* 4.0));
-
+      nsamples = step_length * SampleRate * 2 / 1000;
       last_bpm = bpm_;
     }
 
@@ -295,15 +299,28 @@ int DrumLoop::LoopFunc(void* thread_data) {
       *step = 0;
     }
 
+    if (!loop_running_) {
+      return 0;
+    }
     for (int i = 0; i < 9; i++) {
       if (main_pattern_.tracks[i][*step] != '0') {
-        sound_data_->PlaySample(i);
+        SoundData* sd = ((DrumLoop*)thread_data)->sound_data_;
+        sd->PlaySample(i);
       }
+    }
+    
+    if (!loop_running_) {
+      return 0;
     }
 
     Uint32 now = SDL_GetTicks();
     delay = next_time - now;
 
+    /*if (loop_running_) {
+      SoundData** sd = &(((DrumLoop*)thread_data)->sound_data_);
+      (*sd)->AdvanceDelayBuffer(nsamples);
+      
+    }*/
     if(delay > 0)
       SDL_Delay(delay);
   }

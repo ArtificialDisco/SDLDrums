@@ -79,7 +79,7 @@ class DrumLoop
   int current_undo = 0;
 
   SoundData* sound_data_;
-  SDL_Thread* loop_thread_;
+  SDL_Thread* loop_thread_ = nullptr;
 
   bool loop_running_ = false;
   int current_step_ = STOPPED;

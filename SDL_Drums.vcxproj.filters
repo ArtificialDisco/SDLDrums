@@ -430,5 +430,11 @@
     <CopyFileToFolders Include="images\digits\9.png">
       <Filter>Resource Files\images\digits</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\fx1_off.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\icons_25\fx1_on.png">
+      <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>

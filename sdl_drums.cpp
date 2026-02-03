@@ -8,6 +8,8 @@
 #include <SDL_image.h>
 #endif
 
+#include <functional>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
@@ -30,23 +32,28 @@ Uint32 time_left(void)
 		return next_time - now;
 }
 
-/////////// TODO: Should belong to SDLDrums as well
 SDL_Window* window;
 SDL_Surface* screen = NULL;
 
+
+// Wasn't there supposed to be std::bind for this?
+SDLDrums* sdl_drums_obj;
+void GlobalMixFunc(void* udata, Uint8* stream, int len) {
+  sdl_drums_obj->MixFunc(udata, stream, len);
+}
+
 SDL_Rect scope_rect = { 367, 175, 300, 200 };
-void MixFunc(void* udata, Uint8* stream, int len) {
+void SDLDrums::MixFunc(void* udata, Uint8* stream, int len) {
   SDL_Surface* surface = (SDL_Surface*)udata;
 
-  SDL_Rect srcrect = { 0, 0, 300, 200 };
-  //SDL_Rect dstrect = { 350, 125, 300, 200 };
+  SDL_Rect srcrect = { 0, 0, scope_rect.w, scope_rect.h };
   SDL_FillRect(surface, &srcrect, SDL_MapRGB(screen->format, 0, 0, 0));
   draw_sample(surface, stream, len, SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a));
   SDL_BlitSurface(surface, nullptr, screen, &scope_rect);
   SDL_UpdateWindowSurface(window);
-}
-//////////
 
+  sound_data.GetDelayEffect()->ApplyDelay(stream, len);
+}
 
 bool SDLDrums::InitSDL() {
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
@@ -216,11 +223,15 @@ void SDLDrums::ApplyUndoAction(DrumLoop::UndoAction action, bool undo) {
 }
 
 void SDLDrums::CloseProgram() {
-  printf("Closing program.\n");
+  printf("Closing program....\n");
   SDL_DestroyWindow(window);
+  printf("Destroy Window...\n");
   Mix_Quit();
+  printf("Mix_Quit...\n");
   IMG_Quit();
+  printf("IMG_Quit...\n");
   SDL_Quit();
+  printf("SDL_Quit...\n");
 }
 
 int SDLDrums::InitAllSurfaces(SDL_Surface* screen) {
@@ -292,6 +303,53 @@ int SDLDrums::InitAllSurfaces(SDL_Surface* screen) {
   if (!undo_button_surface || !redo_button_surface || !clear_button_surface) {
     return INIT_FAILED;
   }
+
+  fx1_on = load_surface(screen, fx1_on_file);
+  fx1_off = load_surface(screen, fx1_off_file);
+  if (!fx1_on || !fx1_off) {
+    return INIT_FAILED;
+  }
+}
+
+void SDLDrums::InitBPMButtons() {
+  // Init BPM buttons
+  SDL_Rect bpm_rect;
+  bpm_rect.x = scope_rect.x + 30;
+  bpm_rect.y = Y_MARGIN;
+  bpm_rect.w = bpm_up_10_inactive_surface->w;
+  bpm_rect.h = bpm_up_10_inactive_surface->h;
+  bpm_10_up_button = std::make_unique<Button>(
+    screen, bpm_up_10_active_surface, bpm_up_10_inactive_surface, nullptr,
+    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_10_up_button->Draw();
+
+  bpm_rect.y += bpm_up_10_inactive_surface->h + 5;
+  bpm_10_down_button = std::make_unique<Button>(
+    screen, bpm_down_10_active_surface, bpm_down_10_inactive_surface, nullptr,
+    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_10_down_button->Draw();
+
+  bpm_rect.x += bpm_up_10_inactive_surface->w + 5;
+  bpm_rect.y = Y_MARGIN;
+  bpm_rect.w = bpm_up_1_inactive_surface->w;
+  bpm_rect.h = bpm_up_1_inactive_surface->h;
+  bpm_1_up_button = std::make_unique<Button>(
+    screen, bpm_up_1_active_surface, bpm_up_1_inactive_surface, nullptr,
+    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_1_up_button->Draw();
+
+  bpm_rect.y += bpm_up_1_inactive_surface->h + 5;
+  bpm_1_down_button = std::make_unique<Button>(
+    screen, bpm_down_1_active_surface, bpm_down_1_inactive_surface, nullptr,
+    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  bpm_1_down_button->Draw();
+
+  bpm_indicator_rect =
+  { bpm_rect.x + 60, bpm_rect.y - 20, bpm_rect.w, bpm_rect.h };
+
+  bpm_rect.x += bpm_up_1_active_surface->w + 10;
+  bpm_rect.y = Y_MARGIN;
+  SDL_BlitSurface(bpm_empty_surface, nullptr, screen, &bpm_rect);
 }
 
 SDLDrums::SDLDrums() {
@@ -341,45 +399,7 @@ SDLDrums::SDLDrums() {
     }
   }
 
-  // Init BPM buttons
-  SDL_Rect bpm_rect;
-  bpm_rect.x = scope_rect.x + 30;
-  bpm_rect.y = Y_MARGIN;
-  bpm_rect.w = bpm_up_10_inactive_surface->w;
-  bpm_rect.h = bpm_up_10_inactive_surface->h;
-  bpm_10_up_button = std::make_unique<Button>(
-    screen, bpm_up_10_active_surface, bpm_up_10_inactive_surface, nullptr,
-    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
-  bpm_10_up_button->Draw();
-
-  bpm_rect.y += bpm_up_10_inactive_surface->h + 5;
-  bpm_10_down_button = std::make_unique<Button>(
-    screen, bpm_down_10_active_surface, bpm_down_10_inactive_surface, nullptr,
-    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
-  bpm_10_down_button->Draw();
-
-  bpm_rect.x += bpm_up_10_inactive_surface->w + 5;
-  bpm_rect.y = Y_MARGIN;
-  bpm_rect.w = bpm_up_1_inactive_surface->w;
-  bpm_rect.h = bpm_up_1_inactive_surface->h;
-  bpm_1_up_button = std::make_unique<Button>(
-    screen, bpm_up_1_active_surface, bpm_up_1_inactive_surface, nullptr,
-    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
-  bpm_1_up_button->Draw();
-
-  bpm_rect.y += bpm_up_1_inactive_surface->h + 5;
-  bpm_1_down_button = std::make_unique<Button>(
-    screen, bpm_down_1_active_surface, bpm_down_1_inactive_surface, nullptr,
-    bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
-  bpm_1_down_button->Draw();
-
-  bpm_indicator_rect =
-  { bpm_rect.x + 60, bpm_rect.y - 20, bpm_rect.w, bpm_rect.h };
-
-  bpm_rect.x += bpm_up_1_active_surface->w + 10;
-  bpm_rect.y = Y_MARGIN;
-  SDL_BlitSurface(bpm_empty_surface, nullptr, screen, &bpm_rect);
-
+  InitBPMButtons();
   DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
 
   SDL_Rect trig_rect;
@@ -413,6 +433,15 @@ SDLDrums::SDLDrums() {
         trig_rect.x += 8;
       }
     }
+  }
+
+  // FX Buttons
+  SDL_Rect fx_rect = { trig_rect.x - 21, SCREEN_HEIGHT - Y_MARGIN - 9*27 + 2, 25, 25 };
+  for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
+    fx_button[i] = std::make_unique<Button>(screen, fx1_on,
+      fx1_off, fx1_on, fx_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+    fx_button[i]->Draw();
+    fx_rect.y += 27;
   }
 
   // Step buttons
@@ -487,7 +516,7 @@ SDLDrums::SDLDrums() {
   clear_button->Draw();
 
   SDL_UpdateWindowSurface(window);
-  Mix_SetPostMix(MixFunc, scope);
+  Mix_SetPostMix(GlobalMixFunc, scope);
 }
 
 SDLDrums::~SDLDrums() {
@@ -702,6 +731,19 @@ int SDLDrums::Run() {
           screen_needs_update |=
             trig_buttons[i][j]->HandleEvent(&e);
         }
+        bool fx_button_clicked;
+        fx_button[i]->HandleEvent(&e, &fx_button_clicked);
+        if (fx_button_clicked) {
+          DelayEffect* fx = sound_data.GetDelayEffect();
+          if (fx->ChannelEnabled(8 - i)) {
+            fx_button[i]->SetToggled(false);
+            fx->EnableChannel(8 - i, false);
+          } else {
+            fx_button[i]->SetToggled(true);
+            fx->EnableChannel(8 - i, true);
+          }
+          fx_button_clicked = false;
+        }
       }
       bool step_button_clicked = false;
       for (int i = 0; i < STEP_BUTTONS_TOTAL; i++) {
@@ -784,10 +826,12 @@ int SDLDrums::Run() {
     next_time += TICK_INTERVAL;
     SDL_Delay(time_left());
   }
+  Mix_SetPostMix(nullptr, nullptr);
   return 0;
 }
 
 int main(int argc, char* argv[]) {
   SDLDrums app;
+  sdl_drums_obj = &app;
   return app.Run();
 }

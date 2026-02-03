@@ -50,6 +50,8 @@ class SDLDrums {
   void ApplyUndoAction(DrumLoop::UndoAction action, bool undo);
   void CloseProgram();
   int InitAllSurfaces(SDL_Surface* screen);
+  void MixFunc(void* udata, Uint8* stream, int len);
+  void InitBPMButtons();
 
  private:
   SDL_Keycode sound_button_keys[SOUND_BUTTONS_TOTAL] = {
@@ -78,6 +80,8 @@ class SDLDrums {
   std::unique_ptr<Button> bpm_1_up_button;
   std::unique_ptr<Button> bpm_1_down_button;
 
+  std::unique_ptr<Button> fx_button[9];
+
   SDL_Surface* sound_buttons_inactive[SOUND_BUTTONS_TOTAL];
   SDL_Surface* sound_buttons_active[SOUND_BUTTONS_TOTAL];
   SDL_Surface* trig_button_icons[SOUND_BUTTONS_TOTAL];
@@ -104,8 +108,10 @@ class SDLDrums {
   SDL_Surface* bpm_down_10_active_surface;
   SDL_Surface* bpm_down_1_inactive_surface;
   SDL_Surface* bpm_down_1_active_surface;
-
   SDL_Surface* bpm_empty_surface;
+
+  SDL_Surface* fx1_on;
+  SDL_Surface* fx1_off;
 
   SDL_Surface* empty_slot_surface;
   SDL_Surface* active_empty_slot_surface;
@@ -182,6 +188,9 @@ const char* digit_files[] = {
   "./images/digits/8.png",
   "./images/digits/9.png",
 };
+
+const char* fx1_on_file = "./images/icons_25/fx1_on.png";
+const char* fx1_off_file = "./images/icons_25/fx1_off.png";
 
 const char* empty_slot = "./images/icons_25/empty_slot_b.png";
 const char* active_empty_slot = "./images/icons_25/active_empty_slot.png";
