@@ -352,56 +352,8 @@ void SDLDrums::InitBPMButtons() {
   SDL_BlitSurface(bpm_empty_surface, nullptr, screen, &bpm_rect);
 }
 
-SDLDrums::SDLDrums() {
-  if (!InitSDL()) {
-    CloseProgram();
-  }
-
-  const Uint32 black = SDL_MapRGB(screen->format, 0, 0, 0);
-  Uint32 yellow = SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a);
-
-  SDL_Surface* scope = SDL_CreateRGBSurface(SDL_SWSURFACE, 300, 200,
-    screen->format->BitsPerPixel,
-    screen->format->Rmask, screen->format->Gmask, screen->format->Bmask,
-    screen->format->Amask);
-  draw_border(screen, scope_rect);
-
-  if (!sound_data.LoadSamples(samples_files)) {
-    CloseProgram();
-  }
-
-  // Init drum loop and create sequencer
-  drum_loop = std::make_unique<DrumLoop>(&sound_data);
-
-  if (InitAllSurfaces(screen) == INIT_FAILED) {
-    free_surfaces();
-    CloseProgram();
-  }
-
-  // Init sound pads
-  int button_pos_x = X_MARGIN;
-  int button_pos_y = Y_MARGIN + 2 * SOUND_BUTTON_HEIGHT;
-  for (unsigned i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
-    SDL_Rect rect;
-    rect.x = button_pos_x;
-    rect.y = button_pos_y;
-    rect.w = SOUND_BUTTON_WIDTH;
-    rect.h = SOUND_BUTTON_HEIGHT;
-    sound_buttons[i] = std::make_unique<SoundButton>(
-      screen, sound_buttons_inactive[i], sound_buttons_active[i], rect,
-      sound_button_keys[i], &sound_data);
-    sound_buttons[i]->Draw();
-
-    button_pos_x += (SOUND_BUTTON_WIDTH);
-    if ((i + 1) % 3 == 0) {
-      button_pos_x = X_MARGIN;
-      button_pos_y -= (SOUND_BUTTON_HEIGHT);
-    }
-  }
-
-  InitBPMButtons();
-  DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
-
+// Actual drum triggers, fx buttons and numbered steps
+void SDLDrums::InitDrumTriggersArea() {
   SDL_Rect trig_rect;
   trig_rect.x = X_MARGIN;
   trig_rect.y = SCREEN_HEIGHT - Y_MARGIN;
@@ -436,7 +388,7 @@ SDLDrums::SDLDrums() {
   }
 
   // FX Buttons
-  SDL_Rect fx_rect = { trig_rect.x - 21, SCREEN_HEIGHT - Y_MARGIN - 9*27 + 2, 25, 25 };
+  SDL_Rect fx_rect = { trig_rect.x - 21, SCREEN_HEIGHT - Y_MARGIN - 9 * 27 + 2, 25, 25 };
   for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
     fx_button[i] = std::make_unique<Button>(screen, fx1_on,
       fx1_off, fx1_on, fx_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
@@ -463,6 +415,58 @@ SDLDrums::SDLDrums() {
       step_rect.x += 8;
     }
   }
+}
+
+SDLDrums::SDLDrums() {
+  if (!InitSDL()) {
+    CloseProgram();
+  }
+
+  const Uint32 black = SDL_MapRGB(screen->format, 0, 0, 0);
+  Uint32 yellow = SDL_MapRGB(screen->format, 0xff, 0xb8, 0x2a);
+
+  SDL_Surface* scope = SDL_CreateRGBSurface(SDL_SWSURFACE, 300, 200,
+    screen->format->BitsPerPixel,
+    screen->format->Rmask, screen->format->Gmask, screen->format->Bmask,
+    screen->format->Amask);
+  draw_border(screen, scope_rect);
+
+  if (!sound_data.LoadSamples(samples_files)) {
+    CloseProgram();
+  }
+
+  // Init drum loop and create sequencer
+  drum_loop = std::make_unique<DrumLoop>(&sound_data);
+
+  if (InitAllSurfaces(screen) == INIT_FAILED) {
+    free_surfaces();
+    CloseProgram();
+  }
+  InitDrumTriggersArea();
+
+  // Init sound pads
+  int button_pos_x = X_MARGIN;
+  int button_pos_y = Y_MARGIN + 2 * SOUND_BUTTON_HEIGHT;
+  for (unsigned i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
+    SDL_Rect rect;
+    rect.x = button_pos_x;
+    rect.y = button_pos_y;
+    rect.w = SOUND_BUTTON_WIDTH;
+    rect.h = SOUND_BUTTON_HEIGHT;
+    sound_buttons[i] = std::make_unique<SoundButton>(
+      screen, sound_buttons_inactive[i], sound_buttons_active[i], rect,
+      sound_button_keys[i], &sound_data);
+    sound_buttons[i]->Draw();
+
+    button_pos_x += (SOUND_BUTTON_WIDTH);
+    if ((i + 1) % 3 == 0) {
+      button_pos_x = X_MARGIN;
+      button_pos_y -= (SOUND_BUTTON_HEIGHT);
+    }
+  }
+
+  InitBPMButtons();
+  DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
 
   // Control buttons
   SDL_Rect play_rect = { X_MARGIN, SCREEN_HEIGHT - 420,

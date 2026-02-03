@@ -52,6 +52,7 @@ class SDLDrums {
   int InitAllSurfaces(SDL_Surface* screen);
   void MixFunc(void* udata, Uint8* stream, int len);
   void InitBPMButtons();
+  void InitDrumTriggersArea();
 
  private:
   SDL_Keycode sound_button_keys[SOUND_BUTTONS_TOTAL] = {
