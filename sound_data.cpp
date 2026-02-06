@@ -6,9 +6,10 @@ DelayEffect::DelayEffect() {
   for (int i = 0; i < 9; i++) {
     channel_enabled_[i] = false;
   }
-  for (int i = 0; i < 2*SampleRate; i++) {
+  for (int i = 0; i < MaxBufferLength; i++) {
     delay_buffer_[i] = 0;
   }
+  DelayLength = 2 * SampleRate / 1000 * milliseconds_;
 }
 
 DelayEffect::~DelayEffect() {
@@ -20,32 +21,63 @@ void DelayEffect::AddToBuffer(Mix_Chunk* chunk) {
   Sint16* chunk16 = (Sint16*)chunk->abuf;
   Sint16* delay16 = (Sint16*)delay_buffer_;
   int idx = buffer_index_;
-  for (int i = 0; i < chunk->alen / 2; i += 2) {
-    delay16[(idx + nsamples + i) % SampleRate] = chunk16[i];
-    delay16[(idx + nsamples + i + 1) % SampleRate] = chunk16[i + 1];
+
+  if (chunk->alen < 2) {
+    return;
   }
+
+  Uint16 format;
+  int channels;
+  Mix_QuerySpec(NULL, &format, &channels);
+
+  Uint8* tmp_delay = (Uint8*)malloc(sizeof(Uint8)*chunk->alen);
+  for (int i = 0; i < chunk->alen; i++) {
+    tmp_delay[i] = *(delay_buffer_ + ((buffer_index_ + nsamples * 4 + i) % (DelayLength)));
+  }
+
+  SDL_MixAudioFormat(tmp_delay, chunk->abuf, format, chunk->alen, SDL_MIX_MAXVOLUME);
+
+  for (int i = 0; i < chunk->alen; i++) {
+    *(delay_buffer_ + ((buffer_index_ + nsamples * 4 + i) % (DelayLength))) = tmp_delay[i];
+  }
+
+  free(tmp_delay);
 }
 
 void DelayEffect::ApplyDelay(Uint8* stream, int len) {
   Sint16* stream16 = (Sint16*)stream;
   Sint16* delay16 = (Sint16*)delay_buffer_;
   int idx = buffer_index_;
-  int i;
-  for (i = 0; i < len/2; i += 2) {
-    delay16[(idx + i + 1) % SampleRate] *= feedback_;
-    delay16[(idx + i) % SampleRate] *= feedback_;
 
-    stream16[i] = stream16[i + 1] * 0.5 +
-      delay16[(idx + i + 1) % SampleRate] * 0.5;
-    stream16[i + 1] = stream16[i] * 0.5 +
-      delay16[(idx + i) % SampleRate] * 0.5;
+  if (len < 2) {
+    return;
   }
-  AdvanceBuffer(i);
+
+  Uint16 format;
+  int channels;
+  Mix_QuerySpec(NULL, &format, &channels);
+  Uint8* delay_tmp = (Uint8*)malloc(sizeof(Uint8)*len);
+
+  for (int i = 0; i < len-1; i+=2) {
+    delay_tmp[i] = *(delay_buffer_ + ((buffer_index_ + i) % DelayLength));
+    delay_tmp[i+1] = *(delay_buffer_ + ((buffer_index_ + i+1) % DelayLength));
+    ((Sint16*)delay_tmp)[i/2] *= feedback_;
+    ((Sint16*)delay_tmp)[i/2+1] *= feedback_;
+  }
+
+  SDL_MixAudioFormat(stream, delay_tmp, format, len, SDL_MIX_MAXVOLUME);
+
+  for (int i = 0; i < len; i++) {
+    *(delay_buffer_ + ((buffer_index_ + i) % DelayLength)) = delay_tmp[i];
+  }
+
+  AdvanceBuffer(len);
+  free(delay_tmp);
 }
 
 void DelayEffect::AdvanceBuffer(int len) {
   buffer_index_ += len;
-  buffer_index_ %= 2*SampleRate;
+  buffer_index_ %= DelayLength;
 }
 
 void DelayEffect::EnableChannel(int ch, bool enabled) {
