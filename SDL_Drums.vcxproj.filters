@@ -49,6 +49,9 @@
     <Filter Include="Resource Files\images\digits">
       <UniqueIdentifier>{a69395ae-ad8d-4d5c-a7f0-02a65b7c3230}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\images\delay">
+      <UniqueIdentifier>{e34000a7-03f9-407e-afa7-2b949aac0b26}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="button.cpp">
@@ -435,6 +438,24 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="images\icons_25\fx1_on.png">
       <Filter>Resource Files\images\icons_25</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\delay\delay_digits.png">
+      <Filter>Resource Files\images\delay</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\delay\delay_left_active.png">
+      <Filter>Resource Files\images\delay</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\delay\delay_left_inactive.png">
+      <Filter>Resource Files\images\delay</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\delay\delay_right_active.png">
+      <Filter>Resource Files\images\delay</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\delay\delay_right_inactive.png">
+      <Filter>Resource Files\images\delay</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\delay\fx1_delay_area_sans_serif_bold.png">
+      <Filter>Resource Files\images\delay</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

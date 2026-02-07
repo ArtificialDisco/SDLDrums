@@ -11,7 +11,7 @@
 #include <memory>
 
 const int SampleRate = 44100;
-const int MaxBufferLength = 2*SampleRate;
+const int MaxBufferLength = 8*SampleRate;
 
 class DelayEffect {
  public:
@@ -23,12 +23,18 @@ class DelayEffect {
   void EnableChannel(int ch, bool enabled);
   bool ChannelEnabled(int channel);
 
+  int GetMilliseconds() { return milliseconds_; }
+  double GetFeedback() { return feedback_; }
+
+  void IncreaseTime(int milliseconds);
+  void IncreaseFeedback(double value);
+
  private:
   int DelayLength = 2*SampleRate;
   Uint8 delay_buffer_[MaxBufferLength];
   int buffer_index_ = 0;
-  int milliseconds_ = 300;
-  float feedback_ = 0.7f;
+  int milliseconds_ = 400;
+  float feedback_ = 0.8f;
   bool channel_enabled_[9];
 };
 

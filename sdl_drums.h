@@ -39,6 +39,9 @@ class SDLDrums {
   const int INIT_FAILED = 1;
 
   bool InitSDL();
+  int InitAllSurfaces(SDL_Surface* screen);
+  void CloseProgram();
+
   bool LoadSoundButtonImgs();
   bool LoadTrigButtonImgs(SDL_Surface* screen);
   bool LoadStepButtonImgs(SDL_Surface* screen);
@@ -46,13 +49,18 @@ class SDLDrums {
   bool UpdateTrigsFromPattern(DrumLoop::Pattern* p);
   bool ClearAndUpdateTrigs();
   bool UpdateTrigs();
+
   void DrawBPM(SDL_Surface* surface, SDL_Rect rect, int bpm);
-  void ApplyUndoAction(DrumLoop::UndoAction action, bool undo);
-  void CloseProgram();
-  int InitAllSurfaces(SDL_Surface* screen);
-  void MixFunc(void* udata, Uint8* stream, int len);
   void InitBPMButtons();
+  bool HandleBPM(SDL_Event* e);
+
+  void ApplyUndoAction(DrumLoop::UndoAction action, bool undo);
+  void MixFunc(void* udata, Uint8* stream, int len);
   void InitDrumTriggersArea();
+  void DrawDelayFXArea();
+  bool HandleDelay(SDL_Event* e);
+  void DrawDelayTimeValue();
+  void DrawDelayFeedbackValue();
 
  private:
   SDL_Keycode sound_button_keys[SOUND_BUTTONS_TOTAL] = {
@@ -62,7 +70,8 @@ class SDLDrums {
   };
   SoundData sound_data;
   std::unique_ptr<DrumLoop> drum_loop;
-  SDL_Rect bpm_indicator_rect;
+  SDL_Rect bpm_indicator_rect_;
+  SDL_Rect delay_area_rect_;
 
   std::unique_ptr<SoundButton> sound_buttons[SOUND_BUTTONS_TOTAL];
   std::unique_ptr<TrigButton> trig_buttons[SOUND_BUTTONS_TOTAL][STEPS_TOTAL];
@@ -80,6 +89,11 @@ class SDLDrums {
   std::unique_ptr<Button> bpm_10_down_button;
   std::unique_ptr<Button> bpm_1_up_button;
   std::unique_ptr<Button> bpm_1_down_button;
+
+  std::unique_ptr<Button> delay_feedback_incr_button;
+  std::unique_ptr<Button> delay_feedback_decr_button;
+  std::unique_ptr<Button> delay_time_incr_button;
+  std::unique_ptr<Button> delay_time_decr_button;
 
   std::unique_ptr<Button> fx_button[9];
 
@@ -113,6 +127,13 @@ class SDLDrums {
 
   SDL_Surface* fx1_on;
   SDL_Surface* fx1_off;
+
+  SDL_Surface* fx1_delay_area_surface;
+  SDL_Surface* fx1_delay_right_inactive_surface;
+  SDL_Surface* fx1_delay_right_active_surface;
+  SDL_Surface* fx1_delay_left_inactive_surface;
+  SDL_Surface* fx1_delay_left_active_surface;
+  SDL_Surface* fx1_delay_digits_surface;
 
   SDL_Surface* empty_slot_surface;
   SDL_Surface* active_empty_slot_surface;
@@ -192,6 +213,13 @@ const char* digit_files[] = {
 
 const char* fx1_on_file = "./images/icons_25/fx1_on.png";
 const char* fx1_off_file = "./images/icons_25/fx1_off.png";
+
+const char* fx1_delay_area_file = "./images/delay/fx1_delay_area_sans_serif_bold.png";
+const char* fx1_delay_right_inactive_file = "./images/delay/delay_right_inactive.png";
+const char* fx1_delay_right_active_file = "./images/delay/delay_right_active.png";
+const char* fx1_delay_left_inactive_file = "./images/delay/delay_left_inactive.png";
+const char* fx1_delay_left_active_file = "./images/delay/delay_left_active.png";
+const char* fx1_delay_digits_file = "./images/delay/delay_digits.png";
 
 const char* empty_slot = "./images/icons_25/empty_slot_b.png";
 const char* active_empty_slot = "./images/icons_25/active_empty_slot.png";

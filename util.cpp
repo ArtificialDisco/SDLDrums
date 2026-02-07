@@ -8,7 +8,7 @@
 
 // Keep track of all surfaces so we can free them correctly
 // Total surfaces are currently 64. Update this when needed.
-SDL_Surface* all_surfaces[70];
+SDL_Surface* all_surfaces[80];
 int total_surfaces = 0;
 
 void free_surfaces() {

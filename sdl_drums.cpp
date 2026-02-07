@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <memory>
+#include <cmath>
 
 #include "sdl_drums.h"
 #include "drum_loop.h"
@@ -88,7 +89,107 @@ bool SDLDrums::InitSDL() {
   return true;
 }
 
+int SDLDrums::InitAllSurfaces(SDL_Surface* screen) {
+  play_button_inactive_surface =
+    load_surface(screen, play_button_inactive_file, false);
+  play_button_active_surface =
+    load_surface(screen, play_button_active_file, false);
+  stop_button_surface =
+    load_surface(screen, stop_button_file, false);
+  rec_button_surface = load_surface(screen, rec_button_file, false);
+  pause_button_surface = load_surface(screen, pause_button_file, false);
+  pause_button_toggled_surface = load_surface(screen,
+    pause_button_toggled_file, false);
 
+  if (!play_button_inactive_surface || !play_button_active_surface ||
+    !stop_button_surface || !rec_button_surface || !pause_button_surface ||
+    !pause_button_toggled_surface) {
+    return INIT_FAILED;
+  }
+
+  bpm_up_10_inactive_surface = load_surface(screen, bpm_up_10_inactive_file);
+  bpm_up_10_active_surface = load_surface(screen, bpm_up_10_active_file);
+  bpm_up_1_inactive_surface = load_surface(screen, bpm_up_1_inactive_file);
+  bpm_up_1_active_surface = load_surface(screen, bpm_up_1_active_file);
+  bpm_down_10_inactive_surface = load_surface(screen, bpm_down_10_inactive_file);
+  bpm_down_10_active_surface = load_surface(screen, bpm_down_10_active_file);
+  bpm_down_1_inactive_surface = load_surface(screen, bpm_down_1_inactive_file);
+  bpm_down_1_active_surface = load_surface(screen, bpm_down_1_active_file);
+  bpm_empty_surface = load_surface(screen, bpm_empty_file);
+
+  if (!bpm_up_10_inactive_surface || !bpm_up_10_active_surface ||
+    !bpm_up_1_inactive_surface || !bpm_up_1_active_surface ||
+    !bpm_down_10_inactive_surface || !bpm_down_10_active_surface ||
+    !bpm_down_1_inactive_surface || !bpm_down_1_active_surface ||
+    !bpm_empty_file) {
+    return INIT_FAILED;
+  }
+
+  empty_slot_surface = load_surface(screen, empty_slot, false);
+  active_empty_slot_surface = load_surface(screen, active_empty_slot, false);
+
+  if (!empty_slot_surface || !active_empty_slot_surface) {
+    return INIT_FAILED;
+  }
+
+  if (!LoadSoundButtonImgs()) {
+    return INIT_FAILED;
+  }
+
+  if (!LoadTrigButtonImgs(screen)) {
+    return INIT_FAILED;
+  }
+
+  if (!LoadStepButtonImgs(screen)) {
+    return INIT_FAILED;
+  }
+
+  if (!LoadDigits(screen)) {
+    return INIT_FAILED;
+  }
+
+  undo_button_surface =
+    load_surface(screen, undo_button_inactive_file);
+  redo_button_surface =
+    load_surface(screen, redo_button_inactive_file);
+  clear_button_surface =
+    load_surface(screen, clear_button_inactive_file);
+
+  if (!undo_button_surface || !redo_button_surface || !clear_button_surface) {
+    return INIT_FAILED;
+  }
+
+  fx1_on = load_surface(screen, fx1_on_file);
+  fx1_off = load_surface(screen, fx1_off_file);
+  fx1_delay_area_surface = load_surface(screen, fx1_delay_area_file);
+  fx1_delay_right_inactive_surface =
+    load_surface(screen, fx1_delay_right_inactive_file);
+  fx1_delay_right_active_surface =
+    load_surface(screen, fx1_delay_right_active_file);
+  fx1_delay_left_inactive_surface =
+    load_surface(screen, fx1_delay_left_inactive_file);
+  fx1_delay_left_active_surface =
+    load_surface(screen, fx1_delay_left_active_file);
+  fx1_delay_digits_surface = load_surface(screen, fx1_delay_digits_file);
+  if (!fx1_on || !fx1_off || !fx1_delay_area_surface ||
+    !fx1_delay_right_inactive_surface || !fx1_delay_right_active_surface ||
+    !fx1_delay_left_inactive_surface || !fx1_delay_left_active_surface ||
+    !fx1_delay_digits_surface) {
+    return INIT_FAILED;
+  }
+}
+
+void SDLDrums::CloseProgram() {
+  printf("Closing program....\n");
+  SDL_DestroyWindow(window);
+  printf("Destroy Window...\n");
+  Mix_Quit();
+  printf("Mix_Quit...\n");
+  IMG_Quit();
+  printf("IMG_Quit...\n");
+  SDL_Quit();
+  printf("SDL_Quit...\n");
+}
 
 bool SDLDrums::LoadSoundButtonImgs() {
   // Make sure all surfaces are init'd as null, since if we fail at file
@@ -185,20 +286,6 @@ bool SDLDrums::UpdateTrigs() {
   return screen_needs_update;
 }
 
-void SDLDrums::DrawBPM(SDL_Surface* surface, SDL_Rect rect, int bpm) {
-  short d3 = bpm % 10; bpm /= 10;
-  short d2 = bpm % 10; bpm /= 10;
-  short d1 = bpm % 10;
-  int x_step = digit_imgs[d1]->w;
-  
-  SDL_BlitSurface(digit_imgs[d1], nullptr, surface, &rect);
-  rect.x += x_step;
-  SDL_BlitSurface(digit_imgs[d2], nullptr, surface, &rect);
-  rect.x += x_step;
-  SDL_BlitSurface(digit_imgs[d3], nullptr, surface, &rect);
-  rect.x += x_step;
-}
-
 // True for undo, false for redo. Maybe confusing? Should use enum despite the boolean
 // nature of this?
 void SDLDrums::ApplyUndoAction(DrumLoop::UndoAction action, bool undo) {
@@ -222,93 +309,18 @@ void SDLDrums::ApplyUndoAction(DrumLoop::UndoAction action, bool undo) {
   }
 }
 
-void SDLDrums::CloseProgram() {
-  printf("Closing program....\n");
-  SDL_DestroyWindow(window);
-  printf("Destroy Window...\n");
-  Mix_Quit();
-  printf("Mix_Quit...\n");
-  IMG_Quit();
-  printf("IMG_Quit...\n");
-  SDL_Quit();
-  printf("SDL_Quit...\n");
-}
+void SDLDrums::DrawBPM(SDL_Surface* surface, SDL_Rect rect, int bpm) {
+  short d3 = bpm % 10; bpm /= 10;
+  short d2 = bpm % 10; bpm /= 10;
+  short d1 = bpm % 10;
+  int x_step = digit_imgs[d1]->w;
 
-int SDLDrums::InitAllSurfaces(SDL_Surface* screen) {
-  play_button_inactive_surface =
-    load_surface(screen, play_button_inactive_file, false);
-  play_button_active_surface =
-    load_surface(screen, play_button_active_file, false);
-  stop_button_surface =
-    load_surface(screen, stop_button_file, false);
-  rec_button_surface = load_surface(screen, rec_button_file, false);
-  pause_button_surface = load_surface(screen, pause_button_file, false);
-  pause_button_toggled_surface = load_surface(screen,
-    pause_button_toggled_file, false);
-
-  if (!play_button_inactive_surface || !play_button_active_surface ||
-    !stop_button_surface || !rec_button_surface || !pause_button_surface ||
-    !pause_button_toggled_surface) {
-    return INIT_FAILED;
-  }
-
-  bpm_up_10_inactive_surface = load_surface(screen, bpm_up_10_inactive_file);
-  bpm_up_10_active_surface = load_surface(screen, bpm_up_10_active_file);
-  bpm_up_1_inactive_surface = load_surface(screen, bpm_up_1_inactive_file);
-  bpm_up_1_active_surface = load_surface(screen, bpm_up_1_active_file);
-  bpm_down_10_inactive_surface = load_surface(screen, bpm_down_10_inactive_file);
-  bpm_down_10_active_surface = load_surface(screen, bpm_down_10_active_file);
-  bpm_down_1_inactive_surface = load_surface(screen, bpm_down_1_inactive_file);
-  bpm_down_1_active_surface = load_surface(screen, bpm_down_1_active_file);
-  bpm_empty_surface = load_surface(screen, bpm_empty_file);
-
-  if (!bpm_up_10_inactive_surface || !bpm_up_10_active_surface ||
-    !bpm_up_1_inactive_surface || !bpm_up_1_active_surface ||
-    !bpm_down_10_inactive_surface || !bpm_down_10_active_surface ||
-    !bpm_down_1_inactive_surface || !bpm_down_1_active_surface ||
-    !bpm_empty_file) {
-    return INIT_FAILED;
-  }
-
-  empty_slot_surface = load_surface(screen, empty_slot, false);
-  active_empty_slot_surface = load_surface(screen, active_empty_slot, false);
-
-  if (!empty_slot_surface || !active_empty_slot_surface) {
-    return INIT_FAILED;
-  }
-
-  if (!LoadSoundButtonImgs()) {
-    return INIT_FAILED;
-  }
-
-  if (!LoadTrigButtonImgs(screen)) {
-    return INIT_FAILED;
-  }
-
-  if (!LoadStepButtonImgs(screen)) {
-    return INIT_FAILED;
-  }
-
-  if (!LoadDigits(screen)) {
-    return INIT_FAILED;
-  }
-
-  undo_button_surface =
-    load_surface(screen, undo_button_inactive_file);
-  redo_button_surface =
-    load_surface(screen, redo_button_inactive_file);
-  clear_button_surface =
-    load_surface(screen, clear_button_inactive_file);
-
-  if (!undo_button_surface || !redo_button_surface || !clear_button_surface) {
-    return INIT_FAILED;
-  }
-
-  fx1_on = load_surface(screen, fx1_on_file);
-  fx1_off = load_surface(screen, fx1_off_file);
-  if (!fx1_on || !fx1_off) {
-    return INIT_FAILED;
-  }
+  SDL_BlitSurface(digit_imgs[d1], nullptr, surface, &rect);
+  rect.x += x_step;
+  SDL_BlitSurface(digit_imgs[d2], nullptr, surface, &rect);
+  rect.x += x_step;
+  SDL_BlitSurface(digit_imgs[d3], nullptr, surface, &rect);
+  rect.x += x_step;
 }
 
 void SDLDrums::InitBPMButtons() {
@@ -344,12 +356,43 @@ void SDLDrums::InitBPMButtons() {
     bpm_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
   bpm_1_down_button->Draw();
 
-  bpm_indicator_rect =
+  bpm_indicator_rect_ =
   { bpm_rect.x + 60, bpm_rect.y - 20, bpm_rect.w, bpm_rect.h };
 
   bpm_rect.x += bpm_up_1_active_surface->w + 10;
   bpm_rect.y = Y_MARGIN;
   SDL_BlitSurface(bpm_empty_surface, nullptr, screen, &bpm_rect);
+}
+
+bool SDLDrums::HandleBPM(SDL_Event* e) {
+  bool screen_needs_update = false;
+  bool bpm_10_up_clicked = false;
+  bool bpm_1_up_clicked = false;
+  bool bpm_10_down_clicked = false;
+  bool bpm_1_down_clicked = false;
+
+  screen_needs_update = bpm_10_up_button->HandleEvent(e, &bpm_10_up_clicked);
+  screen_needs_update = bpm_1_up_button->HandleEvent(e, &bpm_1_up_clicked);
+  screen_needs_update = bpm_10_down_button->HandleEvent(e, &bpm_10_down_clicked);
+  screen_needs_update = bpm_1_down_button->HandleEvent(e, &bpm_1_down_clicked);
+
+  if (bpm_10_up_clicked) {
+    drum_loop->SpeedUp(10);
+    DrawBPM(screen, bpm_indicator_rect_, drum_loop->GetBPM());
+  }
+  else if (bpm_1_up_clicked) {
+    drum_loop->SpeedUp(1);
+    DrawBPM(screen, bpm_indicator_rect_, drum_loop->GetBPM());
+  }
+  else if (bpm_10_down_clicked) {
+    drum_loop->SpeedUp(-10);
+    DrawBPM(screen, bpm_indicator_rect_, drum_loop->GetBPM());
+  }
+  else if (bpm_1_down_clicked) {
+    drum_loop->SpeedUp(-1);
+    DrawBPM(screen, bpm_indicator_rect_, drum_loop->GetBPM());
+  }
+  return screen_needs_update;
 }
 
 // Actual drum triggers, fx buttons and numbered steps
@@ -417,6 +460,140 @@ void SDLDrums::InitDrumTriggersArea() {
   }
 }
 
+void SDLDrums::DrawDelayFXArea() {
+  delay_area_rect_.x = SCREEN_WIDTH - fx1_delay_area_surface->w - 90;
+  delay_area_rect_.y = Y_MARGIN + 300;
+  delay_area_rect_.w = fx1_delay_area_surface->w;
+  delay_area_rect_.h = fx1_delay_area_surface->h;
+
+  SDL_BlitSurface(fx1_delay_area_surface, nullptr, screen, &delay_area_rect_);
+
+  SDL_Rect delay_button_rect =
+      { delay_area_rect_.x + 140, delay_area_rect_.y + 32,
+        fx1_delay_right_active_surface->w, fx1_delay_right_active_surface->h };
+  delay_feedback_decr_button = std::make_unique<Button>(
+      screen, fx1_delay_left_active_surface, fx1_delay_left_inactive_surface,
+      nullptr, delay_button_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  delay_feedback_decr_button->Draw();
+ 
+  delay_button_rect.x += (fx1_delay_right_active_surface->w + 3);
+  delay_feedback_incr_button = std::make_unique<Button>(
+    screen, fx1_delay_right_active_surface, fx1_delay_right_inactive_surface,
+    nullptr, delay_button_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+  delay_feedback_incr_button->Draw();
+
+  delay_button_rect.x -= (fx1_delay_right_active_surface->w + 3);
+  delay_button_rect.y += (fx1_delay_right_active_surface->h + 3);
+  delay_time_decr_button = std::make_unique<Button>(
+    screen, fx1_delay_left_active_surface, fx1_delay_left_inactive_surface,
+    nullptr, delay_button_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+
+  delay_button_rect.x += (fx1_delay_right_active_surface->w + 3);
+  delay_time_incr_button = std::make_unique<Button>(
+    screen, fx1_delay_right_active_surface, fx1_delay_right_inactive_surface,
+    nullptr, delay_button_rect, SDLK_UNKNOWN, SDLK_UNKNOWN);
+
+  DrawDelayFeedbackValue();
+  DrawDelayTimeValue();
+}
+
+void SDLDrums::DrawDelayTimeValue() {
+  int milliseconds = sound_data.GetDelayEffect()->GetMilliseconds();
+
+  SDL_Rect time_value_rect =
+  { delay_area_rect_.x + 97, delay_area_rect_.y + 55, 36, fx1_delay_digits_surface->h };
+  SDL_FillRect(screen, &time_value_rect, SDL_MapRGB(screen->format, 0, 0, 0));
+
+  if (milliseconds == 1000) {
+    time_value_rect.x += 27;
+  }
+  else {
+    time_value_rect.x += 22;
+  }
+
+  while (milliseconds) {
+    int digit = milliseconds % 10;
+    SDL_Rect time_value_dst_rect = { digit*9, 0, 9, fx1_delay_digits_surface->h };
+    SDL_BlitSurface(fx1_delay_digits_surface, &time_value_dst_rect, screen, &time_value_rect);
+    milliseconds /= 10;
+    time_value_rect.x -= 9;
+  }
+}
+
+void SDLDrums::DrawDelayFeedbackValue() {
+  double feedback = sound_data.GetDelayEffect()->GetFeedback();
+
+  SDL_Rect time_value_rect =
+  { delay_area_rect_.x + 102, delay_area_rect_.y + 36, 36, fx1_delay_digits_surface->h };
+  SDL_FillRect(screen, &time_value_rect, SDL_MapRGB(screen->format, 0, 0, 0));
+
+  // Unnecessarily complicated? Maybe. Would be smart to eventually just make a function
+  // that prints numbers-as-strings... or use SDL_ttf.
+  if (feedback < 1.0) {
+    int digit = (int)(std::round(feedback * 10));
+    SDL_Rect feedback_value_dst_rect = { 0, 0, 9, fx1_delay_digits_surface->h };
+    SDL_BlitSurface(fx1_delay_digits_surface, &feedback_value_dst_rect, screen, &time_value_rect);
+
+    time_value_rect.x += 8;
+    feedback_value_dst_rect.x = 90;
+    SDL_BlitSurface(fx1_delay_digits_surface, &feedback_value_dst_rect, screen, &time_value_rect);
+
+    time_value_rect.x += 8;
+    feedback_value_dst_rect.x = digit*9;
+    SDL_BlitSurface(fx1_delay_digits_surface, &feedback_value_dst_rect, screen, &time_value_rect);
+ 
+  } else if (feedback >= 1.0) {
+    SDL_Rect feedback_value_dst_rect = { 9, 0, 9, fx1_delay_digits_surface->h };
+    SDL_BlitSurface(fx1_delay_digits_surface, &feedback_value_dst_rect, screen, &time_value_rect);
+
+    time_value_rect.x += 8;
+    feedback_value_dst_rect.x = 90;
+    SDL_BlitSurface(fx1_delay_digits_surface, &feedback_value_dst_rect, screen, &time_value_rect);
+
+    time_value_rect.x += 8;
+    feedback_value_dst_rect.x = 0;
+    SDL_BlitSurface(fx1_delay_digits_surface, &feedback_value_dst_rect, screen, &time_value_rect);
+  }
+}
+
+bool SDLDrums::HandleDelay(SDL_Event* e) {
+  bool screen_needs_update = false;
+
+  bool delay_feedback_decr_button_clicked = false;
+  delay_feedback_decr_button->HandleEvent(e, &delay_feedback_decr_button_clicked);
+  if (delay_feedback_decr_button_clicked) {
+    sound_data.GetDelayEffect()->IncreaseFeedback(-0.1);
+    DrawDelayFeedbackValue();
+    screen_needs_update = true;
+  }
+
+  bool delay_feedback_incr_button_clicked = false;
+  delay_feedback_incr_button->HandleEvent(e, &delay_feedback_incr_button_clicked);
+  if (delay_feedback_incr_button_clicked) {
+    sound_data.GetDelayEffect()->IncreaseFeedback(0.1);
+    DrawDelayFeedbackValue();
+    screen_needs_update = true;
+  }
+
+  bool delay_time_decr_button_clicked = false;
+  delay_time_decr_button->HandleEvent(e, &delay_time_decr_button_clicked);
+  if (delay_time_decr_button_clicked) {
+    sound_data.GetDelayEffect()->IncreaseTime(-20);
+    DrawDelayTimeValue();
+    screen_needs_update = true;
+  }
+
+  bool delay_time_incr_button_clicked = false;
+  delay_time_incr_button->HandleEvent(e, &delay_time_incr_button_clicked);
+  if (delay_time_incr_button_clicked) {
+    sound_data.GetDelayEffect()->IncreaseTime(20);
+    DrawDelayTimeValue();
+    screen_needs_update = true;
+  }
+
+  return screen_needs_update;
+}
+
 SDLDrums::SDLDrums() {
   if (!InitSDL()) {
     CloseProgram();
@@ -466,7 +643,7 @@ SDLDrums::SDLDrums() {
   }
 
   InitBPMButtons();
-  DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
+  DrawBPM(screen, bpm_indicator_rect_, drum_loop->GetBPM());
 
   // Control buttons
   SDL_Rect play_rect = { X_MARGIN, SCREEN_HEIGHT - 420,
@@ -518,6 +695,8 @@ SDLDrums::SDLDrums() {
     clear_button_surface, clear_button_surface, edit_rect,
     SDLK_l, SDLK_UNKNOWN);
   clear_button->Draw();
+
+  DrawDelayFXArea();
 
   SDL_UpdateWindowSurface(window);
   Mix_SetPostMix(GlobalMixFunc, scope);
@@ -651,31 +830,8 @@ int SDLDrums::Run() {
       }
       ////////////////////////////////
 
-      bool bpm_10_up_clicked = false;
-      bool bpm_1_up_clicked = false;
-      bool bpm_10_down_clicked = false;
-      bool bpm_1_down_clicked = false;
-      screen_needs_update = bpm_10_up_button->HandleEvent(&e, &bpm_10_up_clicked);
-      screen_needs_update = bpm_1_up_button->HandleEvent(&e, &bpm_1_up_clicked);
-      screen_needs_update = bpm_10_down_button->HandleEvent(&e, &bpm_10_down_clicked);
-      screen_needs_update = bpm_1_down_button->HandleEvent(&e, &bpm_1_down_clicked);
-
-      if (bpm_10_up_clicked) {
-        drum_loop->SpeedUp(10);
-        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
-      }
-      else if (bpm_1_up_clicked) {
-        drum_loop->SpeedUp(1);
-        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
-      }
-      else if (bpm_10_down_clicked) {
-        drum_loop->SpeedUp(-10);
-        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
-      }
-      else if (bpm_1_down_clicked) {
-        drum_loop->SpeedUp(-1);
-        DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
-      }
+      screen_needs_update |= HandleBPM(&e);
+      screen_needs_update |= HandleDelay(&e);
 
       bool mousedown = false;
       bool clear_button_clicked = false;
@@ -735,7 +891,7 @@ int SDLDrums::Run() {
           screen_needs_update |=
             trig_buttons[i][j]->HandleEvent(&e);
         }
-        bool fx_button_clicked;
+        bool fx_button_clicked = false;
         fx_button[i]->HandleEvent(&e, &fx_button_clicked);
         if (fx_button_clicked) {
           DelayEffect* fx = sound_data.GetDelayEffect();
@@ -787,11 +943,11 @@ int SDLDrums::Run() {
           break;
         case SDLK_UP:
           drum_loop->SpeedUp(10);
-          DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
+          DrawBPM(screen, bpm_indicator_rect_, drum_loop->GetBPM());
           break;
         case SDLK_DOWN:
           drum_loop->SlowDown(10);
-          DrawBPM(screen, bpm_indicator_rect, drum_loop->GetBPM());
+          DrawBPM(screen, bpm_indicator_rect_, drum_loop->GetBPM());
           break;
         case SDLK_RIGHT:
           drum_loop->NextStep();

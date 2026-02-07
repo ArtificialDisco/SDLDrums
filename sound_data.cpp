@@ -9,7 +9,7 @@ DelayEffect::DelayEffect() {
   for (int i = 0; i < MaxBufferLength; i++) {
     delay_buffer_[i] = 0;
   }
-  DelayLength = 2 * SampleRate / 1000 * milliseconds_;
+  DelayLength = (4 * SampleRate * milliseconds_) / 1000;
 }
 
 DelayEffect::~DelayEffect() {
@@ -17,7 +17,7 @@ DelayEffect::~DelayEffect() {
 }
 
 void DelayEffect::AddToBuffer(Mix_Chunk* chunk) {
-  int nsamples = SampleRate / 1000.0 * milliseconds_;
+  int nsamples = (2*SampleRate * milliseconds_) / 1000;
   Sint16* chunk16 = (Sint16*)chunk->abuf;
   Sint16* delay16 = (Sint16*)delay_buffer_;
   int idx = buffer_index_;
@@ -30,14 +30,21 @@ void DelayEffect::AddToBuffer(Mix_Chunk* chunk) {
   int channels;
   Mix_QuerySpec(NULL, &format, &channels);
 
-  Uint8* tmp_delay = (Uint8*)malloc(sizeof(Uint8)*chunk->alen);
-  for (int i = 0; i < chunk->alen; i++) {
+  Uint8* tmp_delay = chunk->alen > sizeof(Uint8) * nsamples * 4 ?
+        (Uint8*)malloc(chunk->alen) :
+        (Uint8*)malloc(sizeof(Uint8)* nsamples*4);
+
+  for (int i = 0; i < nsamples*2; i++) {
     tmp_delay[i] = *(delay_buffer_ + ((buffer_index_ + nsamples * 4 + i) % (DelayLength)));
   }
 
-  SDL_MixAudioFormat(tmp_delay, chunk->abuf, format, chunk->alen, SDL_MIX_MAXVOLUME);
+  SDL_MixAudioFormat(tmp_delay, chunk->abuf, format, chunk->alen, SDL_MIX_MAXVOLUME*0.9);
 
-  for (int i = 0; i < chunk->alen; i++) {
+  for (int k = chunk->alen; k < nsamples * 2; k++) {
+    tmp_delay[k] = 0;
+  }
+
+  for (int i = 0; i < nsamples*2; i++) {
     *(delay_buffer_ + ((buffer_index_ + nsamples * 4 + i) % (DelayLength))) = tmp_delay[i];
   }
 
@@ -65,7 +72,7 @@ void DelayEffect::ApplyDelay(Uint8* stream, int len) {
     ((Sint16*)delay_tmp)[i/2+1] *= feedback_;
   }
 
-  SDL_MixAudioFormat(stream, delay_tmp, format, len, SDL_MIX_MAXVOLUME);
+  SDL_MixAudioFormat(stream, delay_tmp, format, len, SDL_MIX_MAXVOLUME*0.9);
 
   for (int i = 0; i < len; i++) {
     *(delay_buffer_ + ((buffer_index_ + i) % DelayLength)) = delay_tmp[i];
@@ -78,6 +85,27 @@ void DelayEffect::ApplyDelay(Uint8* stream, int len) {
 void DelayEffect::AdvanceBuffer(int len) {
   buffer_index_ += len;
   buffer_index_ %= DelayLength;
+}
+
+void DelayEffect::IncreaseTime(int milliseconds) {
+  if (milliseconds_ + milliseconds > 1000)
+     milliseconds_ = 1000;
+  else if (milliseconds_ + milliseconds < 20) {
+    milliseconds_ = 20;
+  } else {
+    milliseconds_ += milliseconds;
+  }
+  DelayLength = (4 * SampleRate * milliseconds_) / 1000;
+}
+
+void DelayEffect::IncreaseFeedback(double amount) {
+  if (feedback_ + amount > 1.0) {
+    feedback_ = 1.0;
+  } else if (feedback_ + amount <= 0) {
+    feedback_ = 0.0;
+  } else {
+    feedback_ += amount;
+  }
 }
 
 void DelayEffect::EnableChannel(int ch, bool enabled) {
