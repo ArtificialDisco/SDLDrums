@@ -40,10 +40,6 @@ void DelayEffect::AddToBuffer(Mix_Chunk* chunk) {
 
   SDL_MixAudioFormat(tmp_delay, chunk->abuf, format, chunk->alen, SDL_MIX_MAXVOLUME*0.9);
 
-  for (int k = chunk->alen; k < nsamples * 2; k++) {
-    tmp_delay[k] = 0;
-  }
-
   for (int i = 0; i < nsamples*2; i++) {
     *(delay_buffer_ + ((buffer_index_ + nsamples * 4 + i) % (DelayLength))) = tmp_delay[i];
   }
