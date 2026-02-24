@@ -154,8 +154,13 @@ int SDLDrums::InitAllSurfaces(SDL_Surface* screen) {
     load_surface(screen, redo_button_inactive_file);
   clear_button_surface =
     load_surface(screen, clear_button_inactive_file);
+  export_button_surface =
+    load_surface(screen, export_button_inactive_file);
+  export_button_toggled_surface =
+    load_surface(screen, export_button_toggled_file);
 
-  if (!undo_button_surface || !redo_button_surface || !clear_button_surface) {
+  if (!undo_button_surface || !redo_button_surface||
+      !clear_button_surface || !export_button_surface) {
     return INIT_FAILED;
   }
 
@@ -284,6 +289,53 @@ bool SDLDrums::UpdateTrigs() {
     }
   }
   return screen_needs_update;
+}
+
+bool SDLDrums::HandleEditButtons(SDL_Event* e) {
+  bool mousedown = false;
+  bool clear_button_clicked = false;
+  clear_button->HandleEventBase(e, &mousedown, &clear_button_clicked);
+  if (clear_button_clicked) {
+    // Currently we just do this so that Clear will be added to the undo
+    // list. The SetEnabled's on the trigs will also zero ou the drum loop.
+    // Revisit this.
+    drum_loop->ClearPattern();
+
+    for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
+      for (int j = 0; j < STEPS_TOTAL; j++)
+        trig_buttons[i][j]->SetEnabled(false, false);
+    }
+    UpdateTrigs();
+    return true;
+  }
+
+  bool undo_button_clicked = false;
+  undo_button->HandleEventBase(e, &mousedown,
+    &undo_button_clicked);
+  if (undo_button_clicked) {
+    DrumLoop::UndoAction action = drum_loop->Undo();
+    ApplyUndoAction(action, true);
+    return true;
+  }
+
+  bool redo_button_clicked = false;
+  redo_button->HandleEventBase(e, &mousedown, &redo_button_clicked);
+  if (redo_button_clicked) {
+    DrumLoop::UndoAction action = drum_loop->Redo();
+    ApplyUndoAction(action, false);
+    return true;
+  }
+
+  bool export_button_clicked = false;
+  export_button->HandleEventBase(e, &mousedown, &export_button_clicked);
+  if (export_button_clicked) {
+    if (export_button->Toggled()) {
+      export_button->SetToggled(false);
+    } else {
+      export_button->SetToggled(true);
+    }
+  }
+  return false;
 }
 
 // True for undo, false for redo. Maybe confusing? Should use enum despite the boolean
@@ -673,7 +725,7 @@ SDLDrums::SDLDrums() {
 
   // Edit buttons
   SDL_Rect edit_rect;
-  edit_rect.x = SCREEN_WIDTH - undo_button_surface->w - 70;
+  edit_rect.x = SCREEN_WIDTH - undo_button_surface->w - 170;
   edit_rect.y = Y_MARGIN;
   edit_rect.w = 200;
   edit_rect.h = 50;
@@ -682,12 +734,14 @@ SDLDrums::SDLDrums() {
     SDLK_u, SDLK_UNKNOWN);
   undo_button->Draw();
 
-  edit_rect.y += 10 + redo_button_surface->h;
+  edit_rect.x += undo_button_surface->w + 10;
+  //edit_rect.y += 10 + redo_button_surface->h;
   redo_button = std::make_unique<Button>(screen, nullptr,
     redo_button_surface, redo_button_surface, edit_rect,
     SDLK_r, SDLK_UNKNOWN);
   redo_button->Draw();
 
+  edit_rect.x = SCREEN_WIDTH - undo_button_surface->w - 170;
   edit_rect.y += 10 + clear_button_surface->h;
   edit_rect.w = 200;
   edit_rect.h = 50;
@@ -695,6 +749,12 @@ SDLDrums::SDLDrums() {
     clear_button_surface, clear_button_surface, edit_rect,
     SDLK_l, SDLK_UNKNOWN);
   clear_button->Draw();
+
+  edit_rect.x += undo_button_surface->w + 10;
+  export_button = std::make_unique<Button>(screen, export_button_surface,
+    export_button_surface, export_button_toggled_surface, edit_rect,
+    SDLK_UNKNOWN, SDLK_UNKNOWN);
+  export_button->Draw();
 
   DrawDelayFXArea();
 
@@ -833,39 +893,7 @@ int SDLDrums::Run() {
       screen_needs_update |= HandleBPM(&e);
       screen_needs_update |= HandleDelay(&e);
 
-      bool mousedown = false;
-      bool clear_button_clicked = false;
-      clear_button->HandleEventBase(&e, &mousedown, &clear_button_clicked);
-      if (clear_button_clicked) {
-        // Currently we just do this so that Clear will be added to the undo
-        // list. The SetEnabled's on the trigs will also zero ou the drum loop.
-        // Revisit this.
-        drum_loop->ClearPattern();
-
-        for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
-          for (int j = 0; j < STEPS_TOTAL; j++)
-            trig_buttons[i][j]->SetEnabled(false, false);
-        }
-        UpdateTrigs();
-        screen_needs_update = true;
-      }
-
-      bool undo_button_clicked = false;
-      undo_button->HandleEventBase(&e, &mousedown,
-        &undo_button_clicked);
-      if (undo_button_clicked) {
-        DrumLoop::UndoAction action = drum_loop->Undo();
-        ApplyUndoAction(action, true);
-        screen_needs_update = true;
-      }
-
-      bool redo_button_clicked = false;
-      redo_button->HandleEventBase(&e, &mousedown, &redo_button_clicked);
-      if (redo_button_clicked) {
-        DrumLoop::UndoAction action = drum_loop->Redo();
-        ApplyUndoAction(action, false);
-        screen_needs_update = true;
-      }
+      screen_needs_update |= HandleEditButtons(&e);
 
       for (int i = 0; i < SOUND_BUTTONS_TOTAL; i++) {
         bool clicked = false;

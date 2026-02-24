@@ -151,24 +151,6 @@
     <CopyFileToFolders Include="images\controls\stop_inactive.png">
       <Filter>Resource Files\images\controls</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="images\edit_buttons\clear_button_inactive.png">
-      <Filter>Resource Files\images\edit_buttons</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="images\edit_buttons\clear_button2_inactive.png">
-      <Filter>Resource Files\images\edit_buttons</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="images\edit_buttons\redo_button_inactive.png">
-      <Filter>Resource Files\images\edit_buttons</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="images\edit_buttons\redo_button2_inactive.png">
-      <Filter>Resource Files\images\edit_buttons</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="images\edit_buttons\undo_button_inactive.png">
-      <Filter>Resource Files\images\edit_buttons</Filter>
-    </CopyFileToFolders>
-    <CopyFileToFolders Include="images\edit_buttons\undo_button2_inactive.png">
-      <Filter>Resource Files\images\edit_buttons</Filter>
-    </CopyFileToFolders>
     <CopyFileToFolders Include="images\icons_20\active_empty_slot.png">
       <Filter>Resource Files\images\icons_20</Filter>
     </CopyFileToFolders>
@@ -456,6 +438,21 @@
     </CopyFileToFolders>
     <CopyFileToFolders Include="images\delay\fx1_delay_area_sans_serif_bold.png">
       <Filter>Resource Files\images\delay</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\clear_button5_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\export_button5_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\export_button5_toggled.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\redo_button5_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="images\edit_buttons\undo_button5_inactive.png">
+      <Filter>Resource Files\images\edit_buttons</Filter>
     </CopyFileToFolders>
   </ItemGroup>
 </Project>

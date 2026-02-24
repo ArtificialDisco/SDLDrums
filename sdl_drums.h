@@ -54,7 +54,9 @@ class SDLDrums {
   void InitBPMButtons();
   bool HandleBPM(SDL_Event* e);
 
+  bool HandleEditButtons(SDL_Event* e);
   void ApplyUndoAction(DrumLoop::UndoAction action, bool undo);
+
   void MixFunc(void* udata, Uint8* stream, int len);
   void InitDrumTriggersArea();
   void DrawDelayFXArea();
@@ -84,6 +86,7 @@ class SDLDrums {
   std::unique_ptr<Button> undo_button;
   std::unique_ptr<Button> redo_button;
   std::unique_ptr<Button> clear_button;
+  std::unique_ptr<Button> export_button;
 
   std::unique_ptr<Button> bpm_10_up_button;
   std::unique_ptr<Button> bpm_10_down_button;
@@ -113,6 +116,8 @@ class SDLDrums {
   SDL_Surface* undo_button_surface;
   SDL_Surface* redo_button_surface;
   SDL_Surface* clear_button_surface;
+  SDL_Surface* export_button_surface;
+  SDL_Surface* export_button_toggled_surface;
 
   SDL_Surface* bpm_up_10_inactive_surface;
   SDL_Surface* bpm_up_10_active_surface;
@@ -231,9 +236,11 @@ const char* rec_button_file = "./images/controls/rec_inactive.png";
 const char* pause_button_file = "./images/controls/pause_inactive.png";
 const char* pause_button_toggled_file = "./images/controls/pause_toggled.png";
 
-const char* undo_button_inactive_file = "./images/edit_buttons/undo_button2_inactive.png";
-const char* redo_button_inactive_file = "./images/edit_buttons/redo_button2_inactive.png";
-const char* clear_button_inactive_file = "./images/edit_buttons/clear_button2_inactive.png";
+const char* undo_button_inactive_file = "./images/edit_buttons/undo_button5_inactive.png";
+const char* redo_button_inactive_file = "./images/edit_buttons/redo_button5_inactive.png";
+const char* clear_button_inactive_file = "./images/edit_buttons/clear_button5_inactive.png";
+const char* export_button_inactive_file = "./images/edit_buttons/export_button5_inactive.png";
+const char* export_button_toggled_file = "./images/edit_buttons/export_button5_toggled.png";
 
 const char* bpm_up_10_inactive_file = "./images/bpm/bpm_up_10_inactive.png";
 const char* bpm_up_10_active_file = "./images/bpm/bpm_up_10_active.png";
